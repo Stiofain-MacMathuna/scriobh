@@ -4,7 +4,6 @@ from typing import List, Optional
 
 router = APIRouter()
 
-
 class NoteIn(BaseModel):
     """Schema for creating a new note."""
     title: str
@@ -67,7 +66,7 @@ def update_note(note_id: int, payload: NoteUpdate):
 
 @router.delete("/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_note(note_id: int):
-    """Delete a note by ID."""
+    """Delete a note by ID."""              
     for i, n in enumerate(_notes):
         if n.id == note_id:
             del _notes[i]
