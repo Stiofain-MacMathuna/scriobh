@@ -24,12 +24,7 @@ jobs:
           --health-retries=5
 
     env:
-      DB_HOST: localhost
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: postgres
-      DB_SSL_MODE: disable
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
       PYTHONPATH: backend
 
     steps:
@@ -42,29 +37,18 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r backend/requirements.txt
 
-      - name: Wait for Postgres
+      - name: Confirm Postgres is accepting connections
         run: |
-          for i in {1..10}; do
-            pg_isready -h localhost -p 5432 && break
-            echo "Waiting for Postgres..."
+          for i in {1..15}; do
+            PGPASSWORD=postgres psql -h localhost -U postgres -d postgres -c '\q' && break
+            echo "Waiting for Postgres to accept connections..."
             sleep 2
           done
 
-      - name: Debug DB env vars
-        run: |
-          echo "DB_USER=$DB_USER"
-          echo "DB_PASSWORD=$DB_PASSWORD"
+      - name: Debug DB connection string
+        run: echo "DATABASE_URL=$DATABASE_URL"
 
       - name: Run Alembic migrations
         run: alembic -c backend/alembic.ini upgrade head
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: postgres
-          DB_SSL_MODE: disable
-          PYTHONPATH: backend
-
 
       - run: pytest -v --cov=backend --cov-report=term-missing
