@@ -1,8 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 from uuid import UUID
-from datetime import datetime
 
 from ...db import db_conn
 from ...repos import notes_repo
