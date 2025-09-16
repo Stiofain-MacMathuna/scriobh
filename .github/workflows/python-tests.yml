@@ -50,6 +50,10 @@ jobs:
             sleep 2
           done
 
+      - name: Debug DB env vars
+        run: |
+          echo "DB_USER=$DB_USER"
+          echo "DB_PASSWORD=$DB_PASSWORD"
 
       - name: Run Alembic migrations
         run: alembic -c backend/alembic.ini upgrade head
