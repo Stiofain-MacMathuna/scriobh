@@ -9,12 +9,12 @@ JWT_ALG = os.getenv("JWT_ALG", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 # Database
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME")
-DB_SSL_MODE = os.getenv("DB_SSL_MODE", "require")
+DB_NAME = os.getenv("DB_NAME", "postgres")
+DB_SSL_MODE = os.getenv("DB_SSL_MODE", "disable")  # match your CI config
 DB_POOL_MIN = int(os.getenv("DB_POOL_MIN", "1"))
 DB_POOL_MAX = int(os.getenv("DB_POOL_MAX", "10"))
 DB_POOL_MODE = os.getenv("DB_POOL_MODE", "session")

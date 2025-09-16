@@ -51,4 +51,5 @@ jobs:
       - name: Run Alembic migrations
         run: alembic -c backend/alembic.ini upgrade head
 
-      - run: pytest -v --cov=backend --cov-report=term-missing
+      - name: Run tests
+        run: pytest -v --cov=backend --cov-report=term-missing
