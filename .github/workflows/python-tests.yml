@@ -29,6 +29,7 @@ jobs:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: postgres
+      DB_SSL_MODE: disable
       PYTHONPATH: backend
 
     steps:
@@ -40,5 +41,15 @@ jobs:
 
       - run: python -m pip install --upgrade pip
       - run: pip install -r backend/requirements.txt
+
+      - name: Run Alembic migrations
+        run: alembic upgrade head
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: postgres
+          DB_SSL_MODE: disable
 
       - run: pytest -v --cov=backend --cov-report=term-missing
