@@ -19,8 +19,6 @@ DB_PORT = int(os.getenv("DB_PORT", "5432"))
 DB_NAME = os.getenv("DB_NAME", "")
 SSL_MODE = os.getenv("DB_SSL_MODE", "disable")
 
-print("Alembic connecting to:", config.get_main_option("sqlalchemy.url"))
-
 # Build URL from pieces
 SYNC_URL = URL.create(
     drivername="postgresql+psycopg",
@@ -37,6 +35,8 @@ if DBURL_ENV:
     config.set_main_option("sqlalchemy.url", DBURL_ENV)
 else:
     config.set_main_option("sqlalchemy.url", str(SYNC_URL))
+
+print("Alembic connecting to:", config.get_main_option("sqlalchemy.url"))
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
