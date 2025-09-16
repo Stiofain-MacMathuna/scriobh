@@ -43,7 +43,7 @@ jobs:
       - run: pip install -r backend/requirements.txt
 
       - name: Run Alembic migrations
-        run: alembic upgrade head
+        run: alembic -c backend/alembic.ini upgrade head
         env:
           DB_HOST: localhost
           DB_PORT: 5432
