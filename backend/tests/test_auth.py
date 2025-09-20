@@ -2,14 +2,6 @@ import pytest
 from app.core import security as auth_module
 from tests.constants import TEST_EMAIL, TEST_PASSWORD, FIXED_USER_ID
 
-
-@pytest.mark.asyncio
-async def test_register_existing_user(async_test_client, seed_auth_user, cleanup_user):
-    r = await async_test_client.post("/auth/register", json={"email": TEST_EMAIL, "password": TEST_PASSWORD})
-    assert r.status_code == 400
-    assert r.json()["detail"] == "Email already registered"
-
-
 @pytest.mark.asyncio
 async def test_register_existing_user(async_test_client, seed_auth_user):
     r = await async_test_client.post("/auth/register", json={"email": TEST_EMAIL, "password": TEST_PASSWORD})
@@ -40,4 +32,3 @@ async def test_me_endpoint(async_test_client, seed_auth_user):
     data = r.json()
     assert data["email"] == TEST_EMAIL
     assert data["id"] == str(FIXED_USER_ID)
-
