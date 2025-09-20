@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from typing import List
+from fastapi import APIRouter, HTTPException, Query, Depends, Response
+from typing import List, Optional
 from uuid import UUID
 
 from ...db import db_conn
@@ -12,11 +12,12 @@ router = APIRouter()
 @router.get("/", response_model=List[Note])
 async def list_notes(
     user_id: UUID = Depends(get_current_user_id),
+    search: Optional[str] = Query(None),
     limit: int = 50,
     offset: int = 0,
 ):
     async with db_conn() as conn:
-        rows = await notes_repo.list_notes_by_user(conn, user_id, limit=limit, offset=offset)
+        rows = await notes_repo.list_notes_by_user(conn, user_id, search, limit=limit, offset=offset)
         return [dict(r) for r in rows]
 
 @router.post("/", response_model=Note, status_code=201)
@@ -47,10 +48,11 @@ async def update_note(
             raise HTTPException(status_code=404, detail="Not Found")
         return dict(row)
 
-@router.delete("/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{note_id}")
 async def delete_note(note_id: int, user_id: UUID = Depends(get_current_user_id)):
     async with db_conn() as conn:
         ok = await notes_repo.delete_note_for_user(conn, note_id, user_id)
         if not ok:
+            print(f"Delete failed: note_id={note_id}, user_id={user_id}")
             raise HTTPException(status_code=404, detail="Not Found")
-        return None  
+        return Response(status_code=204)
