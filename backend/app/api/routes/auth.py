@@ -2,10 +2,46 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, EmailStr
 from ...db import db_conn
 from ...core.security import (hash_password, verify_password, create_access_token, get_current_user_id)
-from ...repos import users_repo         
+from ...repos import users_repo, notes_repo  
 from ..schemas.auth import RegisterIn, LoginIn, TokenOut, MeOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+# The content of the welcome note.
+WELCOME_NOTE_CONTENT = """# Welcome to scriobh!
+
+This is a **Markdown-enabled notes app**, built with computer science students in mind. It’s designed to make it easy to take well-structured notes during lectures, tutorials, and coding sessions.
+
+In the bottom-left  corner of the app, you’ll find three important buttons:
+
+1. New Note – Create a fresh note instantly.
+
+2. Toggle Markdown Mode – Switch between plain text and Markdown preview mode to format your notes.
+
+3. Logout – Securely log out of your account when you’re done.
+
+## Markdown Features
+
+* **Headings**: Use `#` for different heading sizes.
+* **Bold**: Wrap text in `**double asterisks**`.
+* **Italics**: Use `*single asterisks*`.
+* **Lists**: Start a line with `*` or `-`.
+
+---
+
+### Code Blocks
+
+You can display code by wrapping it in backticks.
+
+`console.log("Hello, World!");`
+
+You can also create multi-line code blocks like this:
+
+```javascript
+function sayHello() {
+  console.log("Welcome to scriobh!");
+}
+sayHello();"""
 
 @router.post("/register", status_code=201)
 async def register(payload: RegisterIn):
@@ -15,7 +51,17 @@ async def register(payload: RegisterIn):
             raise HTTPException(status_code=400, detail="Email already registered")
         hashed = hash_password(payload.password)
         user = await users_repo.create_user(conn, payload.email, hashed)
-        return {"id": str(user["id"]), "email": user["email"]}
+
+        # After creating the user, create the welcome note
+        await notes_repo.create_note(
+        conn, 
+        title="Welcome!", 
+        content=WELCOME_NOTE_CONTENT, 
+        user_id=user["id"]
+    )
+
+        token = create_access_token(str(user["id"]))
+        return {"access_token": token, "token_type": "bearer"}
     
 @router.post("/login", response_model=TokenOut)
 async def login(payload: LoginIn):
