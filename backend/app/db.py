@@ -5,6 +5,7 @@ from app.core.config import (
     DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME, DB_SSL_MODE,
     DB_POOL_MIN, DB_POOL_MAX, DB_TIMEOUT,
 )
+import ssl as ssl_lib
 
 # Global pool for app
 DB_POOL = None
@@ -18,7 +19,9 @@ async def init_db_pool():
         return DB_POOL
 
     ssl_mode = os.getenv("DB_SSL_MODE", DB_SSL_MODE).lower()
-    ssl = False if ssl_mode == "disable" else True
+    ssl = None
+    if ssl_mode != "disable":
+        ssl = ssl_lib.create_default_context()
 
     DB_POOL = await asyncpg.create_pool(
         user=os.getenv("DB_USER", DB_USER),
