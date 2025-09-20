@@ -1,5 +1,10 @@
-import uuid
+import os
 import pytest
+from dotenv import load_dotenv
+
+dotenv_path = os.path.join(os.getcwd(), "backend", ".env.test")
+load_dotenv(dotenv_path, override=True)
+
 from httpx import AsyncClient
 from asgi_lifespan import LifespanManager
 from app.main import app
@@ -8,21 +13,18 @@ from app.core import security as auth_module
 from httpx import ASGITransport
 from tests.constants import TEST_EMAIL, TEST_PASSWORD, FIXED_USER_ID
 
-# --- Function-scoped test pool ---
 @pytest.fixture(scope="function")
 async def test_pool():
     pool = await init_test_pool()
     yield pool
     await close_test_pool()
 
-# Override auth globally
 @pytest.fixture(scope="session", autouse=True)
 def override_auth_dependency():
     app.dependency_overrides[auth_module.get_current_user_id] = lambda: FIXED_USER_ID
     yield
     app.dependency_overrides.clear()
 
-# Async test client
 @pytest.fixture(scope="function")
 async def async_test_client(test_pool):
     async with LifespanManager(app):
@@ -30,7 +32,6 @@ async def async_test_client(test_pool):
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             yield client
 
-# Cleanup notes after each test
 @pytest.fixture
 async def cleanup_notes(test_pool):
     async with get_test_db_conn(test_pool) as conn:
@@ -48,6 +49,7 @@ async def cleanup_user(test_pool):
 @pytest.fixture
 async def seed_auth_user(test_pool):
     async with test_pool.acquire() as conn:
+        await conn.execute("DELETE FROM notes WHERE user_id = $1", FIXED_USER_ID)
         await conn.execute("DELETE FROM users WHERE email = $1", TEST_EMAIL)
         await conn.execute("""
             INSERT INTO users (id, email, password_hash)
