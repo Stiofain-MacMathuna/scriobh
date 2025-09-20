@@ -7,11 +7,6 @@ from .api.routes.auth import router as auth_router
 from fastapi.responses import JSONResponse
 import os
 
-print("DBG DB_HOST:", os.getenv("DB_HOST"))
-print("DBG DB_USER:", os.getenv("DB_USER"))
-print("DBG DB_NAME:", os.getenv("DB_NAME"))
-print("DBG DB_SSL_MODE:", os.getenv("DB_SSL_MODE"))
-
 # Lifespan shutdown / startup context manager. FastAPI instance calls this on start up and shutdown.
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,6 +27,10 @@ app.add_middleware(
     allow_credentials=True,
 )
 
+# mount the auth_router and notes_router (which contain many routes) onto the main FastAPI application.
+app.include_router(auth_router) 
+app.include_router(notes_router, prefix="/notes", tags=["notes"])
+
 # health check route.
 @app.get("/health")
 async def health():
@@ -50,7 +49,3 @@ async def health_db():
             ok = False
     code = status.HTTP_200_OK if ok else status.HTTP_503_SERVICE_UNAVAILABLE
     return JSONResponse({"db_ok": ok}, status_code=code)
-
-# mount the auth_router and notes_router (which contain many routes) onto the main FastAPI application.
-app.include_router(auth_router) 
-app.include_router(notes_router, prefix="/notes", tags=["notes"])
