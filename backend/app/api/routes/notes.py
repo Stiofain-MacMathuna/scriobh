@@ -17,15 +17,19 @@ async def list_notes(
     limit: int = Query(50, le=100),
     offset: int = Query(0, ge=0),
 ):
+    print(f"list_notes called for user {user_id} | search='{search}' | limit={limit} | offset={offset}")
     try:
         async with db_conn(timeout=10) as conn:
+            print(f"DB connection acquired for user {user_id}")
             rows = await notes_repo.list_notes_by_user(
                 conn, user_id, search, limit=limit, offset=offset
             )
+            print(f"✅ Retrieved {len(rows)} notes for user {user_id}")
             return [dict(r) for r in rows]
     except Exception as e:
-        print(f"Error in list_notes: {e}")
+        print(f"Error in list_notes for user {user_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch notes")
+
 
 # GET SINGLE NOTE (READ)
 @router.get("/{note_id}", response_model=Note)
