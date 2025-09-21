@@ -43,14 +43,15 @@ function LoginPage({ setNotes }) {
 
       if (res.ok && data.access_token) {
         localStorage.setItem('token', data.access_token);
-        setTimeout(() => navigate('/notes'), 500);
+        // Remove the setTimeout here
+        navigate('/notes');
       } else {
         const message =
           Array.isArray(data.detail)
             ? data.detail.map((d) => d.msg).join(', ')
             : data.detail || 'Authentication failed';
         setError(message);
-}
+      }
     } catch (err) {
       console.error('API call failed:', err);
       setError('Network error or server is down.');

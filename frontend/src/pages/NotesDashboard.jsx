@@ -36,6 +36,8 @@ function NotesDashboard() {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
     const delay = setTimeout(() => {
       const fetchNotes = async () => {
         setLoading(true);
@@ -53,6 +55,7 @@ function NotesDashboard() {
 
           const res = await fetch(url, {
             headers: { Authorization: `Bearer ${token}` },
+            signal: signal, // Pass the AbortController signal
           });
 
           console.log('Fetch response:', res);
@@ -72,18 +75,28 @@ function NotesDashboard() {
 
           setNotes(data);
         } catch (err) {
-          setError('Error loading notes.');
-          console.error('Error fetching notes:', err.name, err.message);
+          if (err.name === 'AbortError') {
+            console.log('Fetch aborted');
+            // This is not a real error, so we don't set the error state
+          } else {
+            setError('Error loading notes.');
+            console.error('Error fetching notes:', err.name, err.message);
+          }
         } finally {
-          setLoading(false);
+          if (!signal.aborted) {
+            setLoading(false);
+          }
         }
       };
 
       fetchNotes();
     }, 500);
 
-    return () => clearTimeout(delay);
-  }, [searchTerm]);
+    return () => {
+      clearTimeout(delay);
+      controller.abort(); // Abort the fetch request on unmount
+    };
+  }, [searchTerm, token]); // Add token to the dependency array
 
   const handleAddNote = async () => {
     console.log('Adding new note...');
