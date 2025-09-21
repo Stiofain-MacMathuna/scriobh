@@ -37,6 +37,14 @@ export default function DashboardLayout() {
         },
       });
 
+      // Handle 404 specifically
+      if (res.status === 404) {
+        console.log("No notes found for this user. Displaying a blank slate.");
+        setOpenNotes([]);
+        setActiveNoteId(null);
+        return;
+      }
+
       if (!res.ok) {
         let errData = {};
         try {
@@ -50,8 +58,8 @@ export default function DashboardLayout() {
       const data = await res.json();
       setOpenNotes(data);
 
-      if (!data.some((note) => note.id === activeNoteId)) {
-        setActiveNoteId(data.length > 0 ? data[0].id : null);
+      if (data.length > 0 && !data.some((note) => note.id === activeNoteId)) {
+        setActiveNoteId(data[0].id);
       }
     } catch (err) {
       console.error('Error fetching notes:', err);
@@ -129,7 +137,7 @@ export default function DashboardLayout() {
             !loading &&
             !error && (
               <div className="flex-1 flex items-center justify-center text-gray-300">
-                Select a note to begin editing
+                Select a note or create a new one to begin editing
               </div>
             )
           )}
