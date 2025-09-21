@@ -1,11 +1,28 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/scrollbar.css';
 import Tooltip from './Tooltip';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDelete, isMarkdownMode, setIsMarkdownMode }) {
+function fetchWithTimeout(url, options = {}, timeout = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
+export default function Sidebar({
+  notes,
+  activeNoteId,
+  onSelect,
+  onCreate,
+  onDelete,
+  isMarkdownMode,
+  setIsMarkdownMode,
+}) {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleCreate = async () => {
     const token = localStorage.getItem('token');
@@ -15,8 +32,11 @@ export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDel
       return;
     }
 
+    setLoading(true);
+    setError('');
+
     try {
-      const res = await fetch(`${API_URL}/notes`, {
+      const res = await fetchWithTimeout(`${API_URL}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -36,8 +56,12 @@ export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDel
       }
 
       if (!res.ok) {
-        const errData = await res.json();
+        let errData = {};
+        try {
+          errData = await res.json();
+        } catch {}
         console.warn('Create failed:', errData);
+        setError('Failed to create note.');
         return;
       }
 
@@ -46,6 +70,9 @@ export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDel
       onSelect(newNote);
     } catch (err) {
       console.error('Failed to create note:', err);
+      setError('Network error while creating note.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,8 +81,11 @@ export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDel
     const confirmed = window.confirm('Are you sure you want to delete this note?');
     if (!confirmed) return;
 
+    setLoading(true);
+    setError('');
+
     try {
-      const res = await fetch(`${API_URL}/notes/${noteId}`, {
+      const res = await fetchWithTimeout(`${API_URL}/notes/${noteId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -63,17 +93,24 @@ export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDel
       });
 
       if (!res.ok) {
-        const errorBody = await res.json().catch(() => ({}));
+        let errorBody = {};
+        try {
+          errorBody = await res.json();
+        } catch {}
         console.error('Delete failed:', errorBody);
         if (res.status === 404) {
           alert('Note not found or already deleted.');
         }
+        setError('Failed to delete note.');
         return;
       }
 
       onDelete(noteId);
     } catch (err) {
       console.error('Error deleting note:', err);
+      setError('Network error while deleting note.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,12 +141,13 @@ export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDel
 
   return (
     <div className="h-full w-full flex flex-col p-4 text-white">
-      {/* Logo Section */}
       <div className="mb-4">
         <h1 className="text-3xl font-bold text-[#34D399]">scríobh</h1>
       </div>
 
-      {/* Scrollable list of notes */}
+      {loading && <p className="text-sm text-gray-400 mb-2">Processing...</p>}
+      {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
+
       <div className="flex-1 overflow-y-auto mb-4 custom-scrollbar">
         {Array.isArray(notes) && notes.length > 0 ? (
           notes.map((note) => (
@@ -150,7 +188,6 @@ export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDel
         )}
       </div>
 
-      {/* Buttons at the bottom */}
       <div className="shrink-0 flex items-center justify-between">
         <Tooltip text="Log Out">
           <button

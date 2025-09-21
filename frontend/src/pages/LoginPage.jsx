@@ -3,10 +3,18 @@ import { useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+function fetchWithTimeout(url, options = {}, timeout = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
 function LoginPage({ setNotes }) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const isPasswordValid =
@@ -23,8 +31,11 @@ function LoginPage({ setNotes }) {
       return;
     }
 
+    setLoading(true);
+    setError('');
+
     try {
-      const res = await fetch(`${API_URL}${endpoint}`, {
+      const res = await fetchWithTimeout(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -34,25 +45,16 @@ function LoginPage({ setNotes }) {
       console.log('Response:', data);
 
       if (res.ok && data.access_token) {
-        const token = data.access_token;
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const isExpired = payload.exp * 1000 < Date.now();
-
-        if (isExpired) {
-          alert('Session expired immediately. Please try logging in again.');
-          return;
-        }
-
-        localStorage.setItem('token', token);
-
-        // Navigate immediately; don't try to read notes from registration response
+        localStorage.setItem('token', data.access_token);
         navigate('/notes');
       } else {
-        alert(data.detail || 'Authentication failed');
+        setError(data.detail || 'Authentication failed');
       }
-    } catch (error) {
-      console.error('API call failed:', error);
-      alert('Network error or server is down.');
+    } catch (err) {
+      console.error('API call failed:', err);
+      setError('Network error or server is down.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,10 +64,11 @@ function LoginPage({ setNotes }) {
         <h1 className="text-3xl font-bold text-[#34D399]">scríobh</h1>
       </div>
 
-      <div className="flex flex-col rounded-2xl bg-[#1e293b] p-8 shadow-2xl backdrop-blur-md">
-        <h2 className="text-3xl font-bold mb-6 text-[#34D399]">
+      <div className="flex flex-col rounded-2xl bg-[#1e293b] p-8 shadow-2xl backdrop-blur-md w-full max-w-md">
+        <h2 className="text-3xl font-bold mb-6 text-[#34D399] text-center">
           {isLogin ? 'Login' : 'Register'}
         </h2>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="email"
@@ -90,15 +93,22 @@ function LoginPage({ setNotes }) {
           )}
           <button
             type="submit"
-            disabled={!isLogin && !isPasswordValid}
+            disabled={loading || (!isLogin && !isPasswordValid)}
             className="mt-4 w-full py-2 rounded-lg bg-blue-600 text-white font-bold transition hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed"
           >
-            {isLogin ? 'Login' : 'Register'}
+            {loading ? 'Processing...' : isLogin ? 'Login' : 'Register'}
           </button>
         </form>
+
+        {error && <p className="mt-4 text-sm text-red-500 text-center">{error}</p>}
+
         <button
-          onClick={() => setIsLogin(!isLogin)}
-          className="mt-4 text-sm text-center text-blue-400 hover:text-blue-300 transition"
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setError('');
+            setPassword('');
+          }}
+          className="mt-6 text-sm text-center text-blue-400 hover:text-blue-300 transition"
         >
           {isLogin ? 'Need an account? Register here.' : 'Already have an account? Login here.'}
         </button>

@@ -4,6 +4,12 @@ import ReactMarkdown from 'react-markdown';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+function fetchWithTimeout(url, options = {}, timeout = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
 function NotesDashboard() {
   const [notes, setNotes] = useState([]);
   const [newTitle, setNewTitle] = useState('');
@@ -12,52 +18,63 @@ function NotesDashboard() {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const isExpired = payload.exp * 1000 < Date.now();
-        if (isExpired) {
-          localStorage.removeItem('token');
-          navigate('/');
-        }
-      } catch (err) {
-        console.error('Invalid token format:', err);
+    if (!token) {
+      navigate('/');
+      return;
+    }
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp * 1000 < Date.now()) {
         localStorage.removeItem('token');
         navigate('/');
       }
-    } else {
+    } catch {
+      localStorage.removeItem('token');
       navigate('/');
     }
-  }, [token, navigate]);
+  }, []);
 
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const url = searchTerm
-          ? `${API_URL}/notes?search=${encodeURIComponent(searchTerm)}`
-          : `${API_URL}/notes`;
+    const delay = setTimeout(() => {
+      const fetchNotes = async () => {
+        setLoading(true);
+        setError('');
+        try {
+          const url = searchTerm
+            ? `${API_URL}/notes?search=${encodeURIComponent(searchTerm)}`
+            : `${API_URL}/notes`;
 
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+          const res = await fetchWithTimeout(url, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
-        const data = await res.json();
-        setNotes(data);
-      } catch (err) {
-        console.error('Fetch error:', err);
-      }
-    };
+          if (!res.ok) throw new Error('Failed to fetch notes');
+          const data = await res.json();
+          setNotes(data);
+        } catch (err) {
+          setError('Error loading notes.');
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    fetchNotes();
-  }, [searchTerm, token]);
+      fetchNotes();
+    }, 500);
+
+    return () => clearTimeout(delay);
+  }, [searchTerm]);
 
   const handleAddNote = async () => {
     try {
-      const res = await fetch(`${API_URL}/notes`, {
+      const res = await fetchWithTimeout(`${API_URL}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,34 +83,30 @@ function NotesDashboard() {
         body: JSON.stringify({ title: newTitle, content: newContent }),
       });
 
-      if (res.ok) {
-        const created = await res.json();
-        setNotes((prev) => [...prev, created]);
-        setNewTitle('');
-        setNewContent('');
-        setSearchTerm('');
-      } else {
-        console.error('Failed to add note');
-      }
+      if (!res.ok) throw new Error('Failed to add note');
+      const created = await res.json();
+      setNotes((prev) => [...prev, created]);
+      setNewTitle('');
+      setNewContent('');
+      setSearchTerm('');
     } catch (err) {
-      console.error('Error adding note:', err);
+      setError('Error adding note.');
+      console.error(err);
     }
   };
 
   const handleDeleteNote = async (id) => {
     try {
-      const res = await fetch(`${API_URL}/notes/${id}`, {
+      const res = await fetchWithTimeout(`${API_URL}/notes/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (res.ok) {
-        setNotes((prev) => prev.filter((note) => note.id !== id));
-      } else {
-        console.error('Failed to delete note');
-      }
+      if (!res.ok) throw new Error('Failed to delete note');
+      setNotes((prev) => prev.filter((note) => note.id !== id));
     } catch (err) {
-      console.error('Error deleting note:', err);
+      setError('Error deleting note.');
+      console.error(err);
     }
   };
 
@@ -105,7 +118,7 @@ function NotesDashboard() {
 
   const handleUpdateNote = async () => {
     try {
-      const res = await fetch(`${API_URL}/notes/${editingNoteId}`, {
+      const res = await fetchWithTimeout(`${API_URL}/notes/${editingNoteId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -114,19 +127,17 @@ function NotesDashboard() {
         body: JSON.stringify({ title: editTitle, content: editContent }),
       });
 
-      if (res.ok) {
-        const updated = await res.json();
-        setNotes((prev) =>
-          prev.map((note) => (note.id === updated.id ? updated : note))
-        );
-        setEditingNoteId(null);
-        setEditTitle('');
-        setEditContent('');
-      } else {
-        console.error('Failed to update note');
-      }
+      if (!res.ok) throw new Error('Failed to update note');
+      const updated = await res.json();
+      setNotes((prev) =>
+        prev.map((note) => (note.id === updated.id ? updated : note))
+      );
+      setEditingNoteId(null);
+      setEditTitle('');
+      setEditContent('');
     } catch (err) {
-      console.error('Error updating note:', err);
+      setError('Error updating note.');
+      console.error(err);
     }
   };
 
@@ -148,6 +159,9 @@ function NotesDashboard() {
         onChange={(e) => setSearchTerm(e.target.value)}
         style={{ marginTop: '1rem', marginBottom: '1rem', display: 'block' }}
       />
+
+      {loading && <p>Loading notes...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div style={{ marginTop: '1rem' }}>
         <input

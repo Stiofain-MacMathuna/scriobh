@@ -6,6 +6,12 @@ import '../styles/scrollbar.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+function fetchWithTimeout(url, options = {}, timeout = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
 function NoteEditor({ note, onChange, isMarkdownMode }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -13,12 +19,12 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
   const [editorWidth, setEditorWidth] = useState(50);
   const [isReadyToSave, setIsReadyToSave] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const containerRef = useRef(null);
   const noteIdRef = useRef(null);
   const lastSavedRef = useRef({ title: '', content: '' });
 
-  // Initialize note
   useEffect(() => {
     if (!note) return;
 
@@ -35,17 +41,18 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
 
     lastSavedRef.current = { title: note.title, content: newContent };
     setIsReadyToSave(true);
+    setError('');
   }, [note]);
 
-  // Debounced save function
   const saveNoteDebounced = useCallback(
     _.debounce(async (id, titleToSave, contentToSave) => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
       setIsSaving(true);
+      setError('');
       try {
-        const res = await fetch(`${API_URL}/notes/${id}`, {
+        const res = await fetchWithTimeout(`${API_URL}/notes/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -57,12 +64,14 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
         const responseBody = await res.json();
         if (!res.ok) {
           console.error('Failed to save note:', responseBody);
+          setError('Failed to save note.');
         } else {
           lastSavedRef.current = { title: titleToSave, content: contentToSave };
           if (onChange) onChange(responseBody);
         }
       } catch (err) {
         console.error('Network error while saving:', err);
+        setError('Network error while saving.');
       } finally {
         setIsSaving(false);
       }
@@ -70,7 +79,12 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
     []
   );
 
-  // Handle title change
+  useEffect(() => {
+    return () => {
+      saveNoteDebounced.cancel();
+    };
+  }, []);
+
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
@@ -84,7 +98,6 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
     }
   };
 
-  // Handle content change
   const handleContentChange = (e) => {
     const newContent = e.target.value;
     setContent(newContent);
@@ -94,12 +107,14 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
     setHtmlContent(sanitizedMarkup);
 
     if (!isReadyToSave || !note?.id) return;
-    if (title !== lastSavedRef.current.title || newContent !== lastSavedRef.current.content) {
+    if (
+      title !== lastSavedRef.current.title ||
+      newContent !== lastSavedRef.current.content
+    ) {
       saveNoteDebounced(note.id, title, newContent);
     }
   };
 
-  // Handle editor resize
   const handleMouseDown = (e) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -131,7 +146,10 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
           className="w-full px-4 text-2xl font-semibold placeholder-gray-400 border-b border-white/10 pb-2 focus:outline-none bg-transparent rounded"
           placeholder="Note title"
         />
-        {isSaving && <div className="text-sm text-gray-400 ml-4">Saving...</div>}
+        <div className="ml-4 flex items-center gap-4">
+          {isSaving && <div className="text-sm text-gray-400">Saving...</div>}
+          {error && <div className="text-sm text-red-500">{error}</div>}
+        </div>
       </div>
 
       {isMarkdownMode ? (

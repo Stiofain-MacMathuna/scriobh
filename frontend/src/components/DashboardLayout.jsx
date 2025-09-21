@@ -4,10 +4,18 @@ import NoteEditor from './NoteEditor';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+function fetchWithTimeout(url, options = {}, timeout = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
 export default function DashboardLayout() {
   const [openNotes, setOpenNotes] = useState([]);
   const [activeNoteId, setActiveNoteId] = useState(null);
   const [isMarkdownMode, setIsMarkdownMode] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const activeNote = openNotes.find((note) => note.id === activeNoteId);
 
@@ -15,18 +23,27 @@ export default function DashboardLayout() {
     const token = localStorage.getItem('token');
     if (!token) {
       console.warn('No token found. Cannot fetch notes.');
+      setError('Authentication required.');
       return;
     }
 
+    setLoading(true);
+    setError('');
+
     try {
-      const res = await fetch(`${API_URL}/notes`, {
+      const res = await fetchWithTimeout(`${API_URL}/notes`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!res.ok) {
-        console.error('Failed to fetch notes:', await res.json());
+        let errData = {};
+        try {
+          errData = await res.json();
+        } catch {}
+        console.error('Failed to fetch notes:', errData);
+        setError('Failed to load notes.');
         return;
       }
 
@@ -38,6 +55,9 @@ export default function DashboardLayout() {
       }
     } catch (err) {
       console.error('Error fetching notes:', err);
+      setError('Network error while loading notes.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -82,25 +102,36 @@ export default function DashboardLayout() {
             onSelect={handleSelectNote}
             onCreate={handleCreateNote}
             onDelete={handleDeleteNote}
-
             isMarkdownMode={isMarkdownMode}
             setIsMarkdownMode={setIsMarkdownMode}
           />
         </div>
 
         <div className="flex-1 rounded-2xl bg-[#1e293b] shadow-2xl backdrop-blur-md overflow-hidden flex flex-col p-6">
-          {activeNote ? (
+          {loading && (
+            <div className="flex-1 flex items-center justify-center text-gray-400">
+              Loading notes...
+            </div>
+          )}
+          {error && (
+            <div className="flex-1 flex items-center justify-center text-red-500">
+              {error}
+            </div>
+          )}
+          {!loading && !error && activeNote ? (
             <NoteEditor
               note={activeNote}
               onChange={updateNoteContent}
               onDelete={handleDeleteNote}
-              
               isMarkdownMode={isMarkdownMode}
             />
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-300">
-              Select a note to begin editing
-            </div>
+            !loading &&
+            !error && (
+              <div className="flex-1 flex items-center justify-center text-gray-300">
+                Select a note to begin editing
+              </div>
+            )
           )}
         </div>
       </div>

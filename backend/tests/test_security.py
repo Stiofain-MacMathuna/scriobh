@@ -8,8 +8,8 @@ async def test_hash_and_verify_password():
     password = "mypassword"
     hashed = await sec.hash_password(password)  
     assert hashed != password
-    assert sec.verify_password(password, hashed)  
-    assert not sec.verify_password("wrongpassword", hashed)
+    assert await sec.verify_password(password, hashed)
+    assert not await sec.verify_password("wrongpassword", hashed)
 
 @pytest.mark.asyncio
 async def test_create_access_token_and_decode(test_pool):

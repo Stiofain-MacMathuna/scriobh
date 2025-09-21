@@ -49,8 +49,7 @@ sayHello();"""
 
 @router.post("/register", status_code=201)
 async def register(payload: RegisterIn, background_tasks: BackgroundTasks):
-    async with db_conn() as conn:
-        # Check if user already exists
+    async with db_conn(timeout=10) as conn:
         existing_user = await users_repo.get_user_by_email(conn, payload.email)
         if existing_user:
             raise HTTPException(
@@ -58,24 +57,25 @@ async def register(payload: RegisterIn, background_tasks: BackgroundTasks):
                 detail="Email already registered"
             )
 
-        # Hash password (async)
         hashed_password = await hash_password(payload.password)
-
-        # Create user
         user = await users_repo.create_user(conn, payload.email, hashed_password)
 
-        # Insert welcome note asynchronously in background
-        background_tasks.add_task(
-            notes_repo.create_note,
-            conn,
-            title="Welcome!",
-            content=WELCOME_NOTE_CONTENT,
-            user_id=user["id"]
-        )
+        async def create_welcome_note(user_id):
+            try:
+                async with db_conn(timeout=10) as bg_conn:
+                    await notes_repo.create_note(
+                        bg_conn,
+                        title="Welcome!",
+                        content=WELCOME_NOTE_CONTENT,
+                        user_id=user_id
+                    )
+                print(f"Welcome note created for user {user_id}")
+            except Exception as e:
+                print(f"Failed to create welcome note for user {user_id}: {e}")
 
-        # Create access token
+        background_tasks.add_task(create_welcome_note, user["id"])
+
         token = create_access_token(str(user["id"]))
-
         return {
             "access_token": token,
             "token_type": "bearer"
@@ -83,16 +83,16 @@ async def register(payload: RegisterIn, background_tasks: BackgroundTasks):
 
 @router.post("/login", response_model=TokenOut)
 async def login(payload: LoginIn):
-    async with db_conn() as conn:
+    async with db_conn(timeout=10) as conn:
         user = await users_repo.get_user_by_email(conn, payload.email)
-        if not user or not verify_password(payload.password, user["password_hash"]):
+        if not user or not await verify_password(payload.password, user["password_hash"]):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
         token = create_access_token(str(user["id"]))
         return {"access_token": token}
 
 @router.get("/me", response_model=MeOut)
 async def me(user_id: str = Depends(get_current_user_id)):
-    async with db_conn() as conn:
+    async with db_conn(timeout=10) as conn:
         user = await users_repo.get_user_by_id(conn, user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")

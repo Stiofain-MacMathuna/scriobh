@@ -2,7 +2,7 @@ from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from .api.routes.notes import router as notes_router
-from .db import db_conn, init_db_pool, close_db_pool
+from .db import DB_POOL, db_conn, init_db_pool, close_db_pool, get_pool_status
 from .api.routes.auth import router as auth_router
 from fastapi.responses import JSONResponse
 
@@ -37,13 +37,17 @@ app.add_middleware(
 app.include_router(auth_router) 
 app.include_router(notes_router, prefix="/notes", tags=["notes"])
 
+@app.get("/")
+async def root():
+    return {"message": "API is running"}
+
 # health check route.
-@app.get("/health")
+@app.get("/health", tags=["health"])
 async def health():
     return {"ok": True}
 
 # db health check.
-@app.get("/health/db")
+@app.get("/health/db", tags=["health"])
 async def health_db():
     # Fetch connection from the connection pool.
     async with db_conn() as conn:
@@ -55,3 +59,8 @@ async def health_db():
             ok = False
     code = status.HTTP_200_OK if ok else status.HTTP_503_SERVICE_UNAVAILABLE
     return JSONResponse({"db_ok": ok}, status_code=code)
+
+@app.get("/health/db-pool", tags=["health"])
+async def health_db_pool():
+    pool_status = get_pool_status()
+    return pool_status
