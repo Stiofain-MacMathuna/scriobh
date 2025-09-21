@@ -46,7 +46,7 @@ function LoginPage({ setNotes }) {
 
       if (res.ok && data.access_token) {
         localStorage.setItem('token', data.access_token);
-        navigate('/notes');
+        setTimeout(() => navigate('/notes'), 500); // small delay to allow welcome note creation
       } else {
         setError(data.detail || 'Authentication failed');
       }

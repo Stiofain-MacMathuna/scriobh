@@ -51,6 +51,8 @@ function NotesDashboard() {
             ? `${API_URL}/notes?search=${encodeURIComponent(searchTerm)}`
             : `${API_URL}/notes/`;
 
+          console.log('📡 Fetching notes from:', url);
+
           const res = await fetchWithTimeout(url, {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -60,7 +62,7 @@ function NotesDashboard() {
           setNotes(data);
         } catch (err) {
           setError('Error loading notes.');
-          console.error(err);
+          console.error('❌ Error fetching notes:', err.name, err.message);
         } finally {
           setLoading(false);
         }
@@ -74,7 +76,7 @@ function NotesDashboard() {
 
   const handleAddNote = async () => {
     try {
-      const res = await fetchWithTimeout(`${API_URL}/notes`, {
+      const res = await fetchWithTimeout(`${API_URL}/notes/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

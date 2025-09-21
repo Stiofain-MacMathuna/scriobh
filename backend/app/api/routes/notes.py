@@ -42,7 +42,7 @@ async def get_note(note_id: int, user_id: UUID = Depends(get_current_user_id)):
 
     return dict(row)
 
-# CREATE NOTE (WRITE, use explicit transaction)
+# CREATE NOTE
 @router.post("/", response_model=Note, status_code=201)
 async def create_note(payload: NoteIn, user_id: UUID = Depends(get_current_user_id)):
     try:
