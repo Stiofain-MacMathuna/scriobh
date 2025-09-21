@@ -51,8 +51,9 @@ async def seed_auth_user(test_pool):
     async with test_pool.acquire() as conn:
         await conn.execute("DELETE FROM notes WHERE user_id = $1", FIXED_USER_ID)
         await conn.execute("DELETE FROM users WHERE email = $1", TEST_EMAIL)
+        hashed_password = await auth_module.hash_password(TEST_PASSWORD)
         await conn.execute("""
             INSERT INTO users (id, email, password_hash)
             VALUES ($1, $2, $3)
-        """, FIXED_USER_ID, TEST_EMAIL, auth_module.hash_password(TEST_PASSWORD))
+        """, FIXED_USER_ID, TEST_EMAIL, hashed_password)
     yield

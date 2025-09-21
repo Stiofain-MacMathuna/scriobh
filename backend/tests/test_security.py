@@ -6,9 +6,9 @@ from jose import jwt
 @pytest.mark.asyncio
 async def test_hash_and_verify_password():
     password = "mypassword"
-    hashed = sec.hash_password(password)
+    hashed = await sec.hash_password(password)  
     assert hashed != password
-    assert sec.verify_password(password, hashed)
+    assert sec.verify_password(password, hashed)  
     assert not sec.verify_password("wrongpassword", hashed)
 
 @pytest.mark.asyncio

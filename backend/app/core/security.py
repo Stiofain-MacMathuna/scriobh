@@ -7,12 +7,17 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from pydantic import BaseModel
 from .config import JWT_SECRET, JWT_ALG, ACCESS_TOKEN_EXPIRE_MINUTES
+import asyncio
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 # bcrypt takes user password str, encodes it / combines with random salt / creates hash then decodes. String is returned. 
-def hash_password(plain: str) -> str:
-    return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
+def _hash_sync(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+async def hash_password(plain: str) -> str:
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _hash_sync, plain)
 
 # verifying if the users inputted password 
 def verify_password(plain: str, hashed: str) -> bool:

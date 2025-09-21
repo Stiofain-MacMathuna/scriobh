@@ -45,21 +45,8 @@ function LoginPage({ setNotes }) {
 
         localStorage.setItem('token', token);
 
-        // Navigate immediately
+        // Navigate immediately; don't try to read notes from registration response
         navigate('/notes');
-
-        // Fetch notes asynchronously after registration
-        if (!isLogin) {
-          const notesRes = await fetch(`${API_URL}/notes/`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (notesRes.ok) {
-            const notesData = await notesRes.json();
-            setNotes(notesData);
-          }
-        }
       } else {
         alert(data.detail || 'Authentication failed');
       }
@@ -67,8 +54,7 @@ function LoginPage({ setNotes }) {
       console.error('API call failed:', error);
       alert('Network error or server is down.');
     }
-};
-
+  };
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f172a] text-white">

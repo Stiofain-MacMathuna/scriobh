@@ -47,38 +47,39 @@ function sayHello() {
 }
 sayHello();"""
 
-async def create_welcome_note(user_id: str):
-    """Create the welcome note in the background."""
-    async with db_conn() as conn:
-        await notes_repo.create_note(
-            conn,
-            title="Welcome!",
-            content=WELCOME_NOTE_CONTENT,
-            user_id=user_id
-        )
-
 @router.post("/register", status_code=201)
 async def register(payload: RegisterIn, background_tasks: BackgroundTasks):
     async with db_conn() as conn:
-        existing = await users_repo.get_user_by_email(conn, payload.email)
-        if existing:
-            raise HTTPException(status_code=400, detail="Email already registered")
+        # Check if user already exists
+        existing_user = await users_repo.get_user_by_email(conn, payload.email)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
 
-        hashed = hash_password(payload.password)
-        user = await users_repo.create_user(conn, payload.email, hashed)
+        # Hash password (async)
+        hashed_password = await hash_password(payload.password)
 
-    # Add the welcome note as a background task
-    background_tasks.add_task(create_welcome_note, str(user["id"]))
+        # Create user
+        user = await users_repo.create_user(conn, payload.email, hashed_password)
 
-    # Create JWT token
-    token = create_access_token(str(user["id"]))
+        # Insert welcome note asynchronously in background
+        background_tasks.add_task(
+            notes_repo.create_note,
+            conn,
+            title="Welcome!",
+            content=WELCOME_NOTE_CONTENT,
+            user_id=user["id"]
+        )
 
-    # Return empty notes initially; frontend can fetch later
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "notes": []
-    }
+        # Create access token
+        token = create_access_token(str(user["id"]))
+
+        return {
+            "access_token": token,
+            "token_type": "bearer"
+        }
 
 @router.post("/login", response_model=TokenOut)
 async def login(payload: LoginIn):
