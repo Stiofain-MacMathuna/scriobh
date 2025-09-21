@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
 from ...db import db_conn
 from ...core.security import (
     hash_password,
@@ -47,36 +47,38 @@ function sayHello() {
 }
 sayHello();"""
 
-@router.post("/register", status_code=201)
-async def register(payload: RegisterIn):
+async def create_welcome_note(user_id: str):
+    """Create the welcome note in the background."""
     async with db_conn() as conn:
-        existing = await users_repo.get_user_by_email(conn, payload.email)
-        if existing:
-            raise HTTPException(status_code=400, detail="Email already registered")
-        
-        hashed = hash_password(payload.password)
-        user = await users_repo.create_user(conn, payload.email, hashed)
-
-        # Create the welcome note
         await notes_repo.create_note(
             conn,
             title="Welcome!",
             content=WELCOME_NOTE_CONTENT,
-            user_id=user["id"]
+            user_id=user_id
         )
 
-        # Fetch all notes for the user
-        notes = await notes_repo.list_notes_by_user(
-            conn, user["id"], search=None, limit=50, offset=0
-        )
+@router.post("/register", status_code=201)
+async def register(payload: RegisterIn, background_tasks: BackgroundTasks):
+    async with db_conn() as conn:
+        existing = await users_repo.get_user_by_email(conn, payload.email)
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-        token = create_access_token(str(user["id"]))
+        hashed = hash_password(payload.password)
+        user = await users_repo.create_user(conn, payload.email, hashed)
 
-        return {
-            "access_token": token,
-            "token_type": "bearer",
-            "notes": [dict(n) for n in notes],
-        }
+    # Add the welcome note as a background task
+    background_tasks.add_task(create_welcome_note, str(user["id"]))
+
+    # Create JWT token
+    token = create_access_token(str(user["id"]))
+
+    # Return empty notes initially; frontend can fetch later
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "notes": []
+    }
 
 @router.post("/login", response_model=TokenOut)
 async def login(payload: LoginIn):
