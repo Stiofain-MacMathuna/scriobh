@@ -49,7 +49,7 @@ function NotesDashboard() {
         try {
           const url = searchTerm
             ? `${API_URL}/notes?search=${encodeURIComponent(searchTerm)}`
-            : `${API_URL}/notes`;
+            : `${API_URL}/notes/`;
 
           const res = await fetchWithTimeout(url, {
             headers: { Authorization: `Bearer ${token}` },
