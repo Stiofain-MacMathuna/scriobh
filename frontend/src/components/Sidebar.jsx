@@ -55,7 +55,7 @@ export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDel
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/notes/${noteId}`, {
+      const res = await fetch(`${API_URL}/notes/${noteId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
