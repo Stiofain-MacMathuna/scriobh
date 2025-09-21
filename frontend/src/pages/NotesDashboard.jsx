@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
-import 'react-toastify/dist/ReactToastify.css';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 function NotesDashboard() {
   const [notes, setNotes] = useState([]);
@@ -21,7 +21,6 @@ function NotesDashboard() {
         const payload = JSON.parse(atob(token.split('.')[1]));
         const isExpired = payload.exp * 1000 < Date.now();
         if (isExpired) {
-          toast.info('Session expired. Please log in again.');
           localStorage.removeItem('token');
           navigate('/');
         }
@@ -39,8 +38,8 @@ function NotesDashboard() {
     const fetchNotes = async () => {
       try {
         const url = searchTerm
-          ? `http://localhost:8000/notes?search=${encodeURIComponent(searchTerm)}`
-          : 'http://localhost:8000/notes';
+          ? `${API_URL}/notes?search=${encodeURIComponent(searchTerm)}`
+          : `${API_URL}/notes`;
 
         const res = await fetch(url, {
           headers: { Authorization: `Bearer ${token}` },
@@ -49,7 +48,6 @@ function NotesDashboard() {
         const data = await res.json();
         setNotes(data);
       } catch (err) {
-        toast.error('Failed to fetch notes');
         console.error('Fetch error:', err);
       }
     };
@@ -59,7 +57,7 @@ function NotesDashboard() {
 
   const handleAddNote = async () => {
     try {
-      const res = await fetch('http://localhost:8000/notes', {
+      const res = await fetch(`${API_URL}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,30 +72,28 @@ function NotesDashboard() {
         setNewTitle('');
         setNewContent('');
         setSearchTerm('');
-        toast.success('Note added successfully');
       } else {
-        toast.error('Failed to add note');
+        console.error('Failed to add note');
       }
     } catch (err) {
-      toast.error('Error adding note');
+      console.error('Error adding note:', err);
     }
   };
 
   const handleDeleteNote = async (id) => {
     try {
-      const res = await fetch(`http://localhost:8000/notes/${id}`, {
+      const res = await fetch(`${API_URL}/notes/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {
         setNotes((prev) => prev.filter((note) => note.id !== id));
-        toast.success('Note deleted');
       } else {
-        toast.error('Failed to delete note');
+        console.error('Failed to delete note');
       }
     } catch (err) {
-      toast.error('Error deleting note');
+      console.error('Error deleting note:', err);
     }
   };
 
@@ -109,7 +105,7 @@ function NotesDashboard() {
 
   const handleUpdateNote = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/notes/${editingNoteId}`, {
+      const res = await fetch(`${API_URL}/notes/${editingNoteId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -126,12 +122,11 @@ function NotesDashboard() {
         setEditingNoteId(null);
         setEditTitle('');
         setEditContent('');
-        toast.success('Note updated');
       } else {
-        toast.error('Failed to update note');
+        console.error('Failed to update note');
       }
     } catch (err) {
-      toast.error('Error updating note');
+      console.error('Error updating note:', err);
     }
   };
 

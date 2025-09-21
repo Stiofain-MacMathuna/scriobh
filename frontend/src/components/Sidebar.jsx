@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/scrollbar.css';
 import Tooltip from './Tooltip';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDelete, isMarkdownMode, setIsMarkdownMode }) {
   const navigate = useNavigate();
 
@@ -14,7 +16,7 @@ export default function Sidebar({ notes, activeNoteId, onSelect, onCreate, onDel
     }
 
     try {
-      const res = await fetch('http://localhost:8000/notes', {
+      const res = await fetch(`${API_URL}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

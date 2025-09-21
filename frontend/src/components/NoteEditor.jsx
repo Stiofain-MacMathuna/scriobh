@@ -3,6 +3,8 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import '../styles/scrollbar.css';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -69,7 +71,7 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
       });
 
       try {
-        const res = await fetch(`http://localhost:8000/notes/${note.id}`, {
+        const res = await fetch(`${API_URL}/notes/${note.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

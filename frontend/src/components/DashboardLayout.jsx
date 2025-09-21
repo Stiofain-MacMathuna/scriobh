@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import NoteEditor from './NoteEditor';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function DashboardLayout() {
   const [openNotes, setOpenNotes] = useState([]);
   const [activeNoteId, setActiveNoteId] = useState(null);
@@ -17,7 +19,7 @@ export default function DashboardLayout() {
     }
 
     try {
-      const res = await fetch('http://localhost:8000/notes', {
+      const res = await fetch(`${API_URL}/notes`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -71,7 +73,7 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#0f172a]">
+    <div className="h-screen w-screen flex flex-col bg-[rgb(15,23,42)]">
       <div className="flex flex-1 p-3 gap-3 overflow-hidden">
         <div className="w-56 shrink-0 bg-[#0f172a] overflow-hidden flex flex-col">
           <Sidebar
