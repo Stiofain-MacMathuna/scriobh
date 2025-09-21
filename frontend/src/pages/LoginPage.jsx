@@ -45,12 +45,21 @@ function LoginPage({ setNotes }) {
 
         localStorage.setItem('token', token);
 
-        // Set notes immediately if registration
-        if (!isLogin && data.notes) {
-          setNotes(data.notes);
-        }
-
+        // Navigate immediately
         navigate('/notes');
+
+        // Fetch notes asynchronously after registration
+        if (!isLogin) {
+          const notesRes = await fetch(`${API_URL}/notes/`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (notesRes.ok) {
+            const notesData = await notesRes.json();
+            setNotes(notesData);
+          }
+        }
       } else {
         alert(data.detail || 'Authentication failed');
       }
@@ -58,7 +67,8 @@ function LoginPage({ setNotes }) {
       console.error('API call failed:', error);
       alert('Network error or server is down.');
     }
-  };
+};
+
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f172a] text-white">
