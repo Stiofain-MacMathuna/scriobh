@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: secure-notes-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: secure-notes-frontend
+    ports:
+      - "80:80"
+    environment:
+      VITE_API_URL: http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
