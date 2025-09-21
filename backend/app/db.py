@@ -12,6 +12,7 @@ DB_POOL = None
 # Separate pool for tests
 _TEST_POOL = None
 
+# App pool
 async def init_db_pool():
     """Initialize the main app pool."""
     global DB_POOL
@@ -42,6 +43,15 @@ async def close_db_pool():
         await DB_POOL.close()
         DB_POOL = None
 
+@asynccontextmanager
+async def db_conn():
+    """Context manager for a single connection from the main pool."""
+    if not DB_POOL:
+        raise RuntimeError("DB pool not initialized. Call init_db_pool() on startup.")
+    async with DB_POOL.acquire() as conn:
+        yield conn
+
+# Test pool
 async def init_test_pool():
     """Initialize the test pool (single session-scoped pool)."""
     global _TEST_POOL
@@ -68,15 +78,7 @@ async def close_test_pool():
         _TEST_POOL = None
 
 @asynccontextmanager
-async def db_conn():
-    """Context manager for app DB connections."""
-    pool = await init_db_pool()
-    async with pool.acquire() as conn:
-        async with conn.transaction():
-            yield conn
-
-@asynccontextmanager
 async def get_test_db_conn(pool):
+    """Context manager for a single test DB connection."""
     async with pool.acquire() as conn:
-        async with conn.transaction():
-            yield conn
+        yield conn
