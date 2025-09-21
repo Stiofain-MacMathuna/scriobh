@@ -53,12 +53,13 @@ async def register(payload: RegisterIn):
         user = await users_repo.create_user(conn, payload.email, hashed)
 
         # After creating the user, create the welcome note
-        await notes_repo.create_note(
+        note = await notes_repo.create_note(
         conn, 
         title="Welcome!", 
         content=WELCOME_NOTE_CONTENT, 
         user_id=user["id"]
     )
+        print("DEBUG - Welcome note created:", note)
 
         token = create_access_token(str(user["id"]))
         return {"access_token": token, "token_type": "bearer"}
