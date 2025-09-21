@@ -2,11 +2,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY backend/requirements.txt /app/
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+COPY requirements.txt .
 
-COPY backend/ /app/
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+COPY . .
 
 EXPOSE 8000
 
