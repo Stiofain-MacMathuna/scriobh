@@ -36,10 +36,10 @@ async def init_db_pool(retries=3, delay=2):
                 command_timeout=int(os.getenv("DB_TIMEOUT", DB_TIMEOUT)),
                 ssl=ssl,
             )
-            print(f"✅ DB pool initialized: max={DB_POOL._maxsize}")
+            print(f"DB pool initialized: max={DB_POOL._maxsize}")
             return DB_POOL
         except Exception as e:
-            print(f"❌ DB pool init failed (attempt {attempt + 1}): {e}")
+            print(f"DB pool init failed (attempt {attempt + 1}): {e}")
             await asyncio.sleep(delay)
 
     raise RuntimeError("Failed to initialize DB pool after retries.")
@@ -59,19 +59,18 @@ async def db_conn(timeout=10):
         async with DB_POOL.acquire(timeout=timeout) as conn:
             yield conn
     except Exception as e:
-        print(f"❌ DB connection acquisition failed: {e}")
+        print(f"DB connection acquisition failed: {e}")
         raise
 
 # Optional: expose pool metrics for health checks
 def get_pool_status():
-    if not DB_POOL:
-        return {"initialized": False}
+    if DB_POOL is None:
+        return {"error": "DB pool not initialized"}
+
     return {
-        "initialized": True,
         "max_size": DB_POOL._maxsize,
-        "used": DB_POOL._used,
-        "free": DB_POOL._queue.qsize(),
-        "waiting": len(DB_POOL._holders) - DB_POOL._used,
+        "current_size": DB_POOL._queue.qsize(),
+        "in_use": DB_POOL._maxsize - DB_POOL._queue.qsize()
     }
 
 # Test pool
