@@ -4,12 +4,6 @@ import ReactMarkdown from 'react-markdown';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function fetchWithTimeout(url, options = {}, timeout = 10000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
-}
-
 function NotesDashboard() {
   const [notes, setNotes] = useState([]);
   const [newTitle, setNewTitle] = useState('');
@@ -56,14 +50,25 @@ function NotesDashboard() {
           console.log('Search term:', searchTerm);
           console.log('Fetching notes from:', url);
 
-          const res = await fetchWithTimeout(url, {
+          const res = await fetch(url, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
           console.log('Fetch response:', res);
-          if (!res.ok) throw new Error('Failed to fetch notes');
+          if (!res.ok) {
+            const errorData = await res.json();
+            console.error('Backend error response:', errorData);
+            throw new Error('Failed to fetch notes');
+          }
+
           const data = await res.json();
           console.log('Notes data:', data);
+
+          if (!Array.isArray(data)) {
+            console.error('Unexpected notes format:', data);
+            throw new Error('Invalid notes format');
+          }
+
           setNotes(data);
         } catch (err) {
           setError('Error loading notes.');
@@ -82,7 +87,7 @@ function NotesDashboard() {
   const handleAddNote = async () => {
     console.log('Adding new note...');
     try {
-      const res = await fetchWithTimeout(`${API_URL}/notes/`, {
+      const res = await fetch(`${API_URL}/notes/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +113,7 @@ function NotesDashboard() {
   const handleDeleteNote = async (id) => {
     console.log(`Deleting note ${id}...`);
     try {
-      const res = await fetchWithTimeout(`${API_URL}/notes/${id}`, {
+      const res = await fetch(`${API_URL}/notes/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -132,7 +137,7 @@ function NotesDashboard() {
   const handleUpdateNote = async () => {
     console.log(`Updating note ${editingNoteId}...`);
     try {
-      const res = await fetchWithTimeout(`${API_URL}/notes/${editingNoteId}`, {
+      const res = await fetch(`${API_URL}/notes/${editingNoteId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
