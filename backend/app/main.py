@@ -5,7 +5,6 @@ from .api.routes.notes import router as notes_router
 from .db import db_conn, init_db_pool, close_db_pool
 from .api.routes.auth import router as auth_router
 from fastapi.responses import JSONResponse
-import os
 
 # Lifespan shutdown / startup context manager. FastAPI instance calls this on start up and shutdown.
 @asynccontextmanager
