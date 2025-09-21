@@ -1,13 +1,17 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from pydantic import BaseModel, EmailStr
 from ...db import db_conn
-from ...core.security import (hash_password, verify_password, create_access_token, get_current_user_id)
+from ...core.security import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user_id,
+)
 from ...repos import users_repo, notes_repo  
 from ..schemas.auth import RegisterIn, LoginIn, TokenOut, MeOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# The content of the welcome note.
+# Welcome note content
 WELCOME_NOTE_CONTENT = """# Welcome to scriobh!
 
 This is a **Markdown-enabled notes app**, built with computer science students in mind. It’s designed to make it easy to take well-structured notes during lectures, tutorials, and coding sessions.
@@ -49,21 +53,31 @@ async def register(payload: RegisterIn):
         existing = await users_repo.get_user_by_email(conn, payload.email)
         if existing:
             raise HTTPException(status_code=400, detail="Email already registered")
+        
         hashed = hash_password(payload.password)
         user = await users_repo.create_user(conn, payload.email, hashed)
 
-        # After creating the user, create the welcome note
-        note = await notes_repo.create_note(
-        conn, 
-        title="Welcome!", 
-        content=WELCOME_NOTE_CONTENT, 
-        user_id=user["id"]
-    )
-        print("DEBUG - Welcome note created:", note)
+        # Create the welcome note
+        await notes_repo.create_note(
+            conn,
+            title="Welcome!",
+            content=WELCOME_NOTE_CONTENT,
+            user_id=user["id"]
+        )
+
+        # Fetch all notes for the user
+        notes = await notes_repo.list_notes_by_user(
+            conn, user["id"], search=None, limit=50, offset=0
+        )
 
         token = create_access_token(str(user["id"]))
-        return {"access_token": token, "token_type": "bearer"}
-    
+
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "notes": [dict(n) for n in notes],
+        }
+
 @router.post("/login", response_model=TokenOut)
 async def login(payload: LoginIn):
     async with db_conn() as conn:
@@ -72,7 +86,7 @@ async def login(payload: LoginIn):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
         token = create_access_token(str(user["id"]))
         return {"access_token": token}
-    
+
 @router.get("/me", response_model=MeOut)
 async def me(user_id: str = Depends(get_current_user_id)):
     async with db_conn() as conn:

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function LoginPage() {
+function LoginPage({ setNotes }) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,6 +44,12 @@ function LoginPage() {
         }
 
         localStorage.setItem('token', token);
+
+        // Set notes immediately if registration
+        if (!isLogin && data.notes) {
+          setNotes(data.notes);
+        }
+
         navigate('/notes');
       } else {
         alert(data.detail || 'Authentication failed');
@@ -56,7 +62,6 @@ function LoginPage() {
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f172a] text-white">
-      {/* Container for the logo */}
       <div className="absolute top-0 left-0 p-4">
         <h1 className="text-3xl font-bold text-[#34D399]">scríobh</h1>
       </div>
