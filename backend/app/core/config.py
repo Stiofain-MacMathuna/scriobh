@@ -1,7 +1,8 @@
 import os
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 
-load_dotenv(find_dotenv())
+dotenv_file = os.getenv("DOTENV", ".env")
+load_dotenv(dotenv_file, override=True)
 
 #JWT
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-only-override")
@@ -14,7 +15,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "postgres")
-DB_SSL_MODE = os.getenv("DB_SSL_MODE", "disable")  # match your CI config
+DB_SSL_MODE = os.getenv("DB_SSL_MODE", "disable")
 DB_POOL_MIN = int(os.getenv("DB_POOL_MIN", "1"))
 DB_POOL_MAX = int(os.getenv("DB_POOL_MAX", "10"))
 DB_POOL_MODE = os.getenv("DB_POOL_MODE", "session")
