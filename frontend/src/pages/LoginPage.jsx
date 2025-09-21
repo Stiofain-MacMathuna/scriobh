@@ -3,12 +3,6 @@ import { useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function fetchWithTimeout(url, options = {}, timeout = 10000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
-}
-
 function LoginPage({ setNotes }) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -35,7 +29,10 @@ function LoginPage({ setNotes }) {
     setError('');
 
     try {
-      const res = await fetchWithTimeout(`${API_URL}${endpoint}`, {
+      console.log('API URL:', API_URL);
+      console.log(`Submitting to ${endpoint} with email: ${email}`);
+
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

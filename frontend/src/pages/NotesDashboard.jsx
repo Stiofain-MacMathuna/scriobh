@@ -45,6 +45,7 @@ function NotesDashboard() {
             ? `${API_URL}/notes?search=${encodeURIComponent(searchTerm)}`
             : `${API_URL}/notes/`;
 
+          console.log('API URL:', API_URL);
           console.log('Starting fetchNotes...');
           console.log('Token:', token);
           console.log('Search term:', searchTerm);
@@ -111,7 +112,7 @@ function NotesDashboard() {
   };
 
   const handleDeleteNote = async (id) => {
-    console.log(`Deleting note ${id}...`);
+    console.log(`🗑️ Deleting note ${id}...`);
     try {
       const res = await fetch(`${API_URL}/notes/${id}`, {
         method: 'DELETE',
@@ -163,7 +164,7 @@ function NotesDashboard() {
   };
 
   const handleLogout = () => {
-    console.log('Logging out...');
+    console.log('🚪 Logging out...');
     localStorage.removeItem('token');
     setSearchTerm('');
     navigate('/');
