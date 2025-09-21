@@ -1,25 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import _ from 'lodash';
 import '../styles/scrollbar.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-function useDebounce(value, delay) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 function NoteEditor({ note, onChange, isMarkdownMode }) {
   const [title, setTitle] = useState('');
@@ -27,93 +12,94 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
   const [htmlContent, setHtmlContent] = useState('');
   const [editorWidth, setEditorWidth] = useState(50);
   const [isReadyToSave, setIsReadyToSave] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const containerRef = useRef(null);
   const noteIdRef = useRef(null);
+  const lastSavedRef = useRef({ title: '', content: '' });
 
-  const debouncedTitle = useDebounce(title, 500);
-  const debouncedContent = useDebounce(content, 500);
-
-  
+  // Initialize note
   useEffect(() => {
-    if (note) {
-      noteIdRef.current = note.id;
-      setIsReadyToSave(false);
+    if (!note) return;
 
-      setTitle(note.title);
-      const newContent = note.content || '';
-      setContent(newContent);
+    noteIdRef.current = note.id;
+    setIsReadyToSave(false);
 
-      const rawMarkup = marked(newContent);
-      const sanitizedMarkup = DOMPurify.sanitize(rawMarkup);
-      setHtmlContent(sanitizedMarkup);
+    setTitle(note.title);
+    const newContent = note.content || '';
+    setContent(newContent);
 
-      setIsReadyToSave(true);
-    }
+    const rawMarkup = marked(newContent);
+    const sanitizedMarkup = DOMPurify.sanitize(rawMarkup);
+    setHtmlContent(sanitizedMarkup);
+
+    lastSavedRef.current = { title: note.title, content: newContent };
+    setIsReadyToSave(true);
   }, [note]);
 
-  useEffect(() => {
-    async function saveNote() {
-      if (!note || !note.id || !isReadyToSave) return;
-      if (note.id !== noteIdRef.current) return;
-      if (note.title === debouncedTitle && note.content === debouncedContent) return;
-
+  // Debounced save function
+  const saveNoteDebounced = useCallback(
+    _.debounce(async (id, titleToSave, contentToSave) => {
       const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No token found. Cannot save note.');
-        return;
-      }
+      if (!token) return;
 
-      console.log('Saving note:', {
-        id: note.id,
-        title: debouncedTitle,
-        content: debouncedContent,
-      });
-
+      setIsSaving(true);
       try {
-        const res = await fetch(`${API_URL}/notes/${note.id}`, {
+        const res = await fetch(`${API_URL}/notes/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            title: debouncedTitle,
-            content: debouncedContent,
-          }),
+          body: JSON.stringify({ title: titleToSave, content: contentToSave }),
         });
 
         const responseBody = await res.json();
-        console.log('Save response:', res.status, responseBody);
-
         if (!res.ok) {
           console.error('Failed to save note:', responseBody);
         } else {
-        
-          if (onChange) {
-            onChange(responseBody);
-          }
+          lastSavedRef.current = { title: titleToSave, content: contentToSave };
+          if (onChange) onChange(responseBody);
         }
-      } catch (error) {
-        console.error('Network error while saving:', error);
+      } catch (err) {
+        console.error('Network error while saving:', err);
+      } finally {
+        setIsSaving(false);
       }
+    }, 1000),
+    []
+  );
+
+  // Handle title change
+  const handleTitleChange = (e) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+
+    if (!isReadyToSave || !note?.id) return;
+    if (
+      newTitle !== lastSavedRef.current.title ||
+      content !== lastSavedRef.current.content
+    ) {
+      saveNoteDebounced(note.id, newTitle, content);
     }
+  };
 
-    saveNote();
-  }, [debouncedTitle, debouncedContent]);
-
+  // Handle content change
   const handleContentChange = (e) => {
     const newContent = e.target.value;
     setContent(newContent);
+
     const rawMarkup = marked(newContent);
     const sanitizedMarkup = DOMPurify.sanitize(rawMarkup);
     setHtmlContent(sanitizedMarkup);
+
+    if (!isReadyToSave || !note?.id) return;
+    if (title !== lastSavedRef.current.title || newContent !== lastSavedRef.current.content) {
+      saveNoteDebounced(note.id, title, newContent);
+    }
   };
 
-  const handleTitleChange = (e) => {
-    setTitle(e.target.value);
-  };
-
+  // Handle editor resize
   const handleMouseDown = (e) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -122,10 +108,8 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
 
     const handleMouseMove = (moveEvent) => {
       const deltaX = moveEvent.clientX - startX;
-      const newWidth = ((startWidth * containerWidth / 100) + deltaX) / containerWidth * 100;
-      if (newWidth > 10 && newWidth < 90) {
-        setEditorWidth(newWidth);
-      }
+      const newWidth = ((startWidth * containerWidth) / 100 + deltaX) / containerWidth * 100;
+      if (newWidth > 10 && newWidth < 90) setEditorWidth(newWidth);
     };
 
     const handleMouseUp = () => {
@@ -147,6 +131,7 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
           className="w-full px-4 text-2xl font-semibold placeholder-gray-400 border-b border-white/10 pb-2 focus:outline-none bg-transparent rounded"
           placeholder="Note title"
         />
+        {isSaving && <div className="text-sm text-gray-400 ml-4">Saving...</div>}
       </div>
 
       {isMarkdownMode ? (
