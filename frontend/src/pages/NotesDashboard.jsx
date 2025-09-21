@@ -45,35 +45,35 @@ function NotesDashboard() {
             ? `${API_URL}/notes?search=${encodeURIComponent(searchTerm)}`
             : `${API_URL}/notes/`;
 
-          console.log('API URL:', API_URL);
-          console.log('Starting fetchNotes...');
-          console.log('Token:', token);
-          console.log('Search term:', searchTerm);
-          console.log('Fetching notes from:', url);
+          console.log('🌐 API URL:', API_URL);
+          console.log('⏳ Starting fetchNotes...');
+          console.log('🔐 Token:', token);
+          console.log('🔍 Search term:', searchTerm);
+          console.log('📡 Fetching notes from:', url);
 
           const res = await fetch(url, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
-          console.log('Fetch response:', res);
+          console.log('✅ Fetch response:', res);
           if (!res.ok) {
             const errorData = await res.json();
-            console.error('Backend error response:', errorData);
+            console.error('❌ Backend error response:', errorData);
             throw new Error('Failed to fetch notes');
           }
 
           const data = await res.json();
-          console.log('Notes data:', data);
+          console.log('📄 Notes data:', data);
 
           if (!Array.isArray(data)) {
-            console.error('Unexpected notes format:', data);
+            console.error('❌ Unexpected notes format:', data);
             throw new Error('Invalid notes format');
           }
 
           setNotes(data);
         } catch (err) {
           setError('Error loading notes.');
-          console.error('Error fetching notes:', err.name, err.message);
+          console.error('❌ Error fetching notes:', err.name, err.message);
         } finally {
           setLoading(false);
         }
@@ -86,7 +86,7 @@ function NotesDashboard() {
   }, [searchTerm]);
 
   const handleAddNote = async () => {
-    console.log('Adding new note...');
+    console.log('📝 Adding new note...');
     try {
       const res = await fetch(`${API_URL}/notes/`, {
         method: 'POST',
@@ -97,17 +97,17 @@ function NotesDashboard() {
         body: JSON.stringify({ title: newTitle, content: newContent }),
       });
 
-      console.log('Add note response:', res);
+      console.log('📬 Add note response:', res);
       if (!res.ok) throw new Error('Failed to add note');
       const created = await res.json();
-      console.log('Note created:', created);
+      console.log('✅ Note created:', created);
       setNotes((prev) => [...prev, created]);
       setNewTitle('');
       setNewContent('');
       setSearchTerm('');
     } catch (err) {
       setError('Error adding note.');
-      console.error('Error adding note:', err.name, err.message);
+      console.error('❌ Error adding note:', err.name, err.message);
     }
   };
 
@@ -119,24 +119,24 @@ function NotesDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log('Delete response:', res);
+      console.log('🧾 Delete response:', res);
       if (!res.ok) throw new Error('Failed to delete note');
       setNotes((prev) => prev.filter((note) => note.id !== id));
     } catch (err) {
       setError('Error deleting note.');
-      console.error('Error deleting note:', err.name, err.message);
+      console.error('❌ Error deleting note:', err.name, err.message);
     }
   };
 
   const handleEditNote = (note) => {
-    console.log('Editing note:', note);
+    console.log('✏️ Editing note:', note);
     setEditingNoteId(note.id);
     setEditTitle(note.title);
     setEditContent(note.content);
   };
 
   const handleUpdateNote = async () => {
-    console.log(`Updating note ${editingNoteId}...`);
+    console.log(`🔄 Updating note ${editingNoteId}...`);
     try {
       const res = await fetch(`${API_URL}/notes/${editingNoteId}`, {
         method: 'PUT',
@@ -147,10 +147,10 @@ function NotesDashboard() {
         body: JSON.stringify({ title: editTitle, content: editContent }),
       });
 
-      console.log('Update response:', res);
+      console.log('📬 Update response:', res);
       if (!res.ok) throw new Error('Failed to update note');
       const updated = await res.json();
-      console.log('Note updated:', updated);
+      console.log('✅ Note updated:', updated);
       setNotes((prev) =>
         prev.map((note) => (note.id === updated.id ? updated : note))
       );
@@ -159,7 +159,7 @@ function NotesDashboard() {
       setEditContent('');
     } catch (err) {
       setError('Error updating note.');
-      console.error('Error updating note:', err.name, err.message);
+      console.error('❌ Error updating note:', err.name, err.message);
     }
   };
 
