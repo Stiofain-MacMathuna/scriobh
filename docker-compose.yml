@@ -4,8 +4,6 @@ services:
   backend:
     build: ./backend
     container_name: secure-notes-backend
-    ports:
-      - "8000:8000"
     env_file:
       - ./backend/.env
     restart: unless-stopped
@@ -13,10 +11,20 @@ services:
   frontend:
     build: ./frontend
     container_name: secure-notes-frontend
+    environment:
+      VITE_API_URL: /api
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  nginx-proxy:
+    build:
+      context: .
+      dockerfile: ./nginx.Dockerfile
+    container_name: notes-nginx
     ports:
       - "80:80"
-    environment:
-      VITE_API_URL: http://13.60.60.57:8000
     depends_on:
+      - frontend
       - backend
     restart: unless-stopped
