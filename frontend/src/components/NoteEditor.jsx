@@ -89,6 +89,10 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
     const newTitle = e.target.value;
     setTitle(newTitle);
 
+    if (onChange && note?.id) {
+      onChange({ ...note, title: newTitle });
+    }
+
     if (!isReadyToSave || !note?.id) return;
     if (
       newTitle !== lastSavedRef.current.title ||
@@ -147,7 +151,6 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
           placeholder="Note title"
         />
         <div className="ml-4 flex items-center gap-4">
-          {isSaving && <div className="text-sm text-gray-400">Saving...</div>}
           {error && <div className="text-sm text-red-500">{error}</div>}
         </div>
       </div>

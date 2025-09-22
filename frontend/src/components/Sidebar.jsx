@@ -145,7 +145,6 @@ export default function Sidebar({
         <h1 className="text-3xl font-bold text-[#34D399]">scríobh</h1>
       </div>
 
-      {loading && <p className="text-sm text-gray-400 mb-2">Processing...</p>}
       {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
 
       <div className="flex-1 overflow-y-auto mb-4 custom-scrollbar">

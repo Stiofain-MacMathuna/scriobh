@@ -97,7 +97,7 @@ function LoginPage({ setNotes }) {
             disabled={loading || (!isLogin && !isPasswordValid)}
             className="mt-4 w-full py-2 rounded-lg bg-blue-600 text-white font-bold transition hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed"
           >
-            {loading ? 'Processing...' : isLogin ? 'Login' : 'Register'}
+            {isLogin ? 'Login' : 'Register'}
           </button>
         </form>
 
