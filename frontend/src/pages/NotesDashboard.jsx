@@ -55,7 +55,7 @@ function NotesDashboard() {
 
           const res = await fetch(url, {
             headers: { Authorization: `Bearer ${token}` },
-            signal: signal, // Pass the AbortController signal
+            signal: signal,
           });
 
           console.log('Fetch response:', res);
@@ -77,7 +77,6 @@ function NotesDashboard() {
         } catch (err) {
           if (err.name === 'AbortError') {
             console.log('Fetch aborted');
-            // This is not a real error, so we don't set the error state
           } else {
             setError('Error loading notes.');
             console.error('Error fetching notes:', err.name, err.message);
@@ -94,9 +93,9 @@ function NotesDashboard() {
 
     return () => {
       clearTimeout(delay);
-      controller.abort(); // Abort the fetch request on unmount
+      controller.abort();
     };
-  }, [searchTerm, token]); // Add token to the dependency array
+  }, [searchTerm, token]);
 
   const handleAddNote = async () => {
     console.log('Adding new note...');

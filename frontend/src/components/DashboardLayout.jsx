@@ -37,7 +37,6 @@ export default function DashboardLayout() {
         },
       });
 
-      // Handle 404 specifically
       if (res.status === 404) {
         console.log("No notes found for this user. Displaying a blank slate.");
         setOpenNotes([]);

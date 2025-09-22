@@ -43,7 +43,6 @@ function LoginPage({ setNotes }) {
 
       if (res.ok && data.access_token) {
         localStorage.setItem('token', data.access_token);
-        // Remove the setTimeout here
         navigate('/notes');
       } else {
         const message =
