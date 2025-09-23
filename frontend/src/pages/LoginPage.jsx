@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -8,8 +8,14 @@ function LoginPage({ setNotes }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowLoading(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const isPasswordValid =
     password.length >= 8 && /\d/.test(password) && /[A-Z]/.test(password);
@@ -29,9 +35,6 @@ function LoginPage({ setNotes }) {
     setError('');
 
     try {
-      console.log('API URL:', API_URL);
-      console.log(`Submitting to ${endpoint} with email: ${email}`);
-
       const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -39,7 +42,6 @@ function LoginPage({ setNotes }) {
       });
 
       const data = await res.json();
-      console.log('Response:', data);
 
       if (res.ok && data.access_token) {
         localStorage.setItem('token', data.access_token);
@@ -52,7 +54,6 @@ function LoginPage({ setNotes }) {
         setError(message);
       }
     } catch (err) {
-      console.error('API call failed:', err);
       setError('Network error or server is down.');
     } finally {
       setLoading(false);
@@ -101,6 +102,9 @@ function LoginPage({ setNotes }) {
           </button>
         </form>
 
+        {loading && showLoading && (
+          <p className="mt-4 text-sm text-gray-400 text-center">Loading...</p>
+        )}
         {error && <p className="mt-4 text-sm text-red-500 text-center">{error}</p>}
 
         <button

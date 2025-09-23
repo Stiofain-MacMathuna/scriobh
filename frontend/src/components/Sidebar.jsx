@@ -19,9 +19,10 @@ export default function Sidebar({
   onDelete,
   isMarkdownMode,
   setIsMarkdownMode,
+  loading,
 }) {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
 
   const handleCreate = async () => {
@@ -32,7 +33,7 @@ export default function Sidebar({
       return;
     }
 
-    setLoading(true);
+    setCreating(true);
     setError('');
 
     try {
@@ -72,7 +73,7 @@ export default function Sidebar({
       console.error('Failed to create note:', err);
       setError('Network error while creating note.');
     } finally {
-      setLoading(false);
+      setCreating(false);
     }
   };
 
@@ -81,7 +82,6 @@ export default function Sidebar({
     const confirmed = window.confirm('Are you sure you want to delete this note?');
     if (!confirmed) return;
 
-    setLoading(true);
     setError('');
 
     try {
@@ -109,8 +109,6 @@ export default function Sidebar({
     } catch (err) {
       console.error('Error deleting note:', err);
       setError('Network error while deleting note.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -148,7 +146,7 @@ export default function Sidebar({
       {error && <p className="text-sm text-red-500 mb-2">{error}</p>}
 
       <div className="flex-1 overflow-y-auto mb-4 custom-scrollbar">
-        {Array.isArray(notes) && notes.length > 0 ? (
+        {!loading && Array.isArray(notes) && notes.length > 0 ? (
           notes.map((note) => (
             <button
               key={note.id}
@@ -183,7 +181,7 @@ export default function Sidebar({
             </button>
           ))
         ) : (
-          <div className="text-gray-400">No notes found.</div>
+          !loading && <div className="text-gray-400">No notes found.</div>
         )}
       </div>
 
@@ -222,7 +220,8 @@ export default function Sidebar({
         <Tooltip text="New Note">
           <button
             onClick={handleCreate}
-            className="p-2 rounded-full text-white transition hover:bg-white/20"
+            disabled={creating}
+            className="p-2 rounded-full text-white transition hover:bg-white/20 disabled:opacity-50"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

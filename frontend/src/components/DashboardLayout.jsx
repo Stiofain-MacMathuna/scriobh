@@ -15,9 +15,15 @@ export default function DashboardLayout() {
   const [activeNoteId, setActiveNoteId] = useState(null);
   const [isMarkdownMode, setIsMarkdownMode] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
   const [error, setError] = useState('');
 
   const activeNote = openNotes.find((note) => note.id === activeNoteId);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowLoading(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   async function fetchNotes() {
     const token = localStorage.getItem('token');
@@ -111,16 +117,17 @@ export default function DashboardLayout() {
             onDelete={handleDeleteNote}
             isMarkdownMode={isMarkdownMode}
             setIsMarkdownMode={setIsMarkdownMode}
+            loading={loading}
           />
         </div>
 
         <div className="flex-1 rounded-2xl bg-[#1e293b] shadow-2xl backdrop-blur-md overflow-hidden flex flex-col p-6">
-          {loading && (
+          {loading && showLoading && (
             <div className="flex-1 flex items-center justify-center text-gray-400">
               Loading notes...
             </div>
           )}
-          {error && (
+          {error && showLoading && (
             <div className="flex-1 flex items-center justify-center text-red-500">
               {error}
             </div>
