@@ -23,6 +23,7 @@ origins = [
     "http://13.60.60.57:80",
     "http://localhost",
     "http://localhost:3000",
+    "https://www.scriobh.io",
 ]
 
 app.add_middleware(
