@@ -6,6 +6,8 @@ services:
     container_name: secure-notes-backend
     env_file:
       - ./backend/.env
+    depends_on:
+      - db
     restart: unless-stopped
 
   frontend:
@@ -31,3 +33,19 @@ services:
       - frontend
       - backend
     restart: unless-stopped
+
+  db:
+    image: postgres:15
+    container_name: secure-notes-db
+    environment:
+      POSTGRES_USER: scriobh
+      POSTGRES_PASSWORD: scriobh
+      POSTGRES_DB: scriobh
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
