@@ -9,6 +9,7 @@ function LoginPage({ setNotes }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
+  const [ready, setReady] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -31,6 +32,7 @@ function LoginPage({ setNotes }) {
       return;
     }
 
+    setReady(false);
     setLoading(true);
     setError('');
 
@@ -57,8 +59,13 @@ function LoginPage({ setNotes }) {
       setError('Network error or server is down.');
     } finally {
       setLoading(false);
+      setReady(true);
     }
   };
+
+  if (!ready) {
+    return <div className="h-screen w-screen bg-[#0f172a]" />;
+  }
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f172a] text-white">

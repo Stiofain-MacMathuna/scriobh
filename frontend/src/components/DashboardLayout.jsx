@@ -17,6 +17,7 @@ export default function DashboardLayout() {
   const [loading, setLoading] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
   const [error, setError] = useState('');
+  const [ready, setReady] = useState(false);
 
   const activeNote = openNotes.find((note) => note.id === activeNoteId);
 
@@ -30,6 +31,7 @@ export default function DashboardLayout() {
     if (!token) {
       console.warn('No token found. Cannot fetch notes.');
       setError('Authentication required.');
+      setReady(true);
       return;
     }
 
@@ -71,6 +73,7 @@ export default function DashboardLayout() {
       setError('Network error while loading notes.');
     } finally {
       setLoading(false);
+      setReady(true);
     }
   }
 
@@ -103,6 +106,10 @@ export default function DashboardLayout() {
     if (activeNoteId === id) {
       setActiveNoteId(null);
     }
+  }
+
+  if (!ready) {
+    return <div className="h-screen w-screen bg-[rgb(15,23,42)]" />;
   }
 
   return (
