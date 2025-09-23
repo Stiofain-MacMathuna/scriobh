@@ -1,22 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function LoginPage({ setNotes }) {
+function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showLoading, setShowLoading] = useState(false);
-  const [ready, setReady] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowLoading(true), 300);
-    return () => clearTimeout(timer);
-  }, []);
 
   const isPasswordValid =
     password.length >= 8 && /\d/.test(password) && /[A-Z]/.test(password);
@@ -32,7 +25,6 @@ function LoginPage({ setNotes }) {
       return;
     }
 
-    setReady(false);
     setLoading(true);
     setError('');
 
@@ -59,13 +51,8 @@ function LoginPage({ setNotes }) {
       setError('Network error or server is down.');
     } finally {
       setLoading(false);
-      setReady(true);
     }
   };
-
-  if (!ready) {
-    return <div className="h-screen w-screen bg-[#0f172a]" />;
-  }
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#0f172a] text-white">
@@ -109,9 +96,7 @@ function LoginPage({ setNotes }) {
           </button>
         </form>
 
-        {loading && showLoading && (
-          <p className="mt-4 text-sm text-gray-400 text-center">Loading...</p>
-        )}
+        {loading && <p className="mt-4 text-sm text-gray-400 text-center">Loading...</p>}
         {error && <p className="mt-4 text-sm text-red-500 text-center">{error}</p>}
 
         <button

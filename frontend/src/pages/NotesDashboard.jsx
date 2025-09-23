@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import _ from 'lodash';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -12,7 +13,7 @@ function NotesDashboard() {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
@@ -33,59 +34,61 @@ function NotesDashboard() {
       localStorage.removeItem('token');
       navigate('/');
     }
-  }, []);
+  }, [token, navigate]);
+
+  const fetchNotes = useCallback(async (currentSearchTerm) => {
+    setLoading(true);
+    setError('');
+    try {
+      const url = currentSearchTerm
+        ? `${API_URL}/notes?search=${encodeURIComponent(currentSearchTerm)}`
+        : `${API_URL}/notes/`;
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || 'Failed to fetch notes');
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid notes format');
+      }
+
+      setNotes(data);
+    } catch (err) {
+      setError('Error loading notes.');
+      console.error('Error fetching notes:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const debouncedSearch = useCallback(
+    _.debounce((term) => {
+      fetchNotes(term);
+    }, 500),
+    [fetchNotes]
+  );
 
   useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-    const delay = setTimeout(() => {
-      const fetchNotes = async () => {
-        setLoading(true);
-        setError('');
-        try {
-          const url = searchTerm
-            ? `${API_URL}/notes?search=${encodeURIComponent(searchTerm)}`
-            : `${API_URL}/notes`;
-
-          const res = await fetch(url, {
-            headers: { Authorization: `Bearer ${token}` },
-            signal: signal,
-          });
-
-          if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error('Failed to fetch notes');
-          }
-
-          const data = await res.json();
-          if (!Array.isArray(data)) {
-            throw new Error('Invalid notes format');
-          }
-
-          setNotes(data);
-        } catch (err) {
-          if (err.name !== 'AbortError') {
-            setError('Error loading notes.');
-          }
-        } finally {
-          if (!signal.aborted) {
-            setLoading(false);
-          }
-        }
-      };
-
-      fetchNotes();
-    }, 500);
-
+    debouncedSearch(searchTerm);
     return () => {
-      clearTimeout(delay);
-      controller.abort();
+      debouncedSearch.cancel();
     };
-  }, [searchTerm, token]);
+  }, [searchTerm, debouncedSearch]);
 
   const handleAddNote = async () => {
+    console.log('Adding new note...');
     try {
-      const res = await fetch(`${API_URL}/notes`, {
+      const res = await fetch(`${API_URL}/notes/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,38 +97,46 @@ function NotesDashboard() {
         body: JSON.stringify({ title: newTitle, content: newContent }),
       });
 
+      console.log('Add note response:', res);
       if (!res.ok) throw new Error('Failed to add note');
       const created = await res.json();
+      console.log('Note created:', created);
       setNotes((prev) => [...prev, created]);
       setNewTitle('');
       setNewContent('');
       setSearchTerm('');
     } catch (err) {
       setError('Error adding note.');
+      console.error('Error adding note:', err.name, err.message);
     }
   };
 
   const handleDeleteNote = async (id) => {
+    console.log(`Deleting note ${id}...`);
     try {
       const res = await fetch(`${API_URL}/notes/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log('Delete response:', res);
       if (!res.ok) throw new Error('Failed to delete note');
       setNotes((prev) => prev.filter((note) => note.id !== id));
     } catch (err) {
       setError('Error deleting note.');
+      console.error('Error deleting note:', err.name, err.message);
     }
   };
 
   const handleEditNote = (note) => {
+    console.log('Editing note:', note);
     setEditingNoteId(note.id);
     setEditTitle(note.title);
     setEditContent(note.content);
   };
 
   const handleUpdateNote = async () => {
+    console.log(`Updating note ${editingNoteId}...`);
     try {
       const res = await fetch(`${API_URL}/notes/${editingNoteId}`, {
         method: 'PUT',
@@ -136,8 +147,10 @@ function NotesDashboard() {
         body: JSON.stringify({ title: editTitle, content: editContent }),
       });
 
+      console.log('Update response:', res);
       if (!res.ok) throw new Error('Failed to update note');
       const updated = await res.json();
+      console.log('Note updated:', updated);
       setNotes((prev) =>
         prev.map((note) => (note.id === updated.id ? updated : note))
       );
@@ -146,14 +159,20 @@ function NotesDashboard() {
       setEditContent('');
     } catch (err) {
       setError('Error updating note.');
+      console.error('Error updating note:', err.name, err.message);
     }
   };
 
   const handleLogout = () => {
+    console.log('Logging out...');
     localStorage.removeItem('token');
     setSearchTerm('');
     navigate('/');
   };
+
+  if (loading) {
+    return <p>Loading notes...</p>;
+  }
 
   return (
     <div style={{ padding: '2rem' }}>
@@ -164,11 +183,10 @@ function NotesDashboard() {
         type="text"
         placeholder="Search notes"
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={handleSearchChange}
         style={{ marginTop: '1rem', marginBottom: '1rem', display: 'block' }}
       />
 
-      {loading && <p>Loading notes...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div style={{ marginTop: '1rem' }}>
@@ -232,6 +250,9 @@ function NotesDashboard() {
           </li>
         ))}
       </ul>
+      {!loading && !error && notes.length === 0 && (
+        <p>No notes found.</p>
+      )}
     </div>
   );
 }

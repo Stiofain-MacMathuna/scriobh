@@ -14,28 +14,20 @@ export default function DashboardLayout() {
   const [openNotes, setOpenNotes] = useState([]);
   const [activeNoteId, setActiveNoteId] = useState(null);
   const [isMarkdownMode, setIsMarkdownMode] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [showLoading, setShowLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [ready, setReady] = useState(false);
 
   const activeNote = openNotes.find((note) => note.id === activeNoteId);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowLoading(true), 300);
-    return () => clearTimeout(timer);
-  }, []);
 
   async function fetchNotes() {
     const token = localStorage.getItem('token');
     if (!token) {
       console.warn('No token found. Cannot fetch notes.');
       setError('Authentication required.');
-      setReady(true);
+      setIsLoading(false);
       return;
     }
 
-    setLoading(true);
     setError('');
 
     try {
@@ -65,15 +57,14 @@ export default function DashboardLayout() {
       const data = await res.json();
       setOpenNotes(data);
 
-      if (data.length > 0 && !data.some((note) => note.id === activeNoteId)) {
+      if (data.length > 0) {
         setActiveNoteId(data[0].id);
       }
     } catch (err) {
       console.error('Error fetching notes:', err);
       setError('Network error while loading notes.');
     } finally {
-      setLoading(false);
-      setReady(true);
+      setIsLoading(false);
     }
   }
 
@@ -108,8 +99,8 @@ export default function DashboardLayout() {
     }
   }
 
-  if (!ready) {
-    return <div className="h-screen w-screen bg-[rgb(15,23,42)]" />;
+  if (isLoading) {
+    return <div className="h-screen w-screen bg-[rgb(15,23,42)] flex items-center justify-center text-gray-400">Loading notes...</div>;
   }
 
   return (
@@ -124,22 +115,16 @@ export default function DashboardLayout() {
             onDelete={handleDeleteNote}
             isMarkdownMode={isMarkdownMode}
             setIsMarkdownMode={setIsMarkdownMode}
-            loading={loading}
+            loading={isLoading}
           />
         </div>
 
         <div className="flex-1 rounded-2xl bg-[#1e293b] shadow-2xl backdrop-blur-md overflow-hidden flex flex-col p-6">
-          {loading && showLoading && (
-            <div className="flex-1 flex items-center justify-center text-gray-400">
-              Loading notes...
-            </div>
-          )}
-          {error && showLoading && (
+          {error ? (
             <div className="flex-1 flex items-center justify-center text-red-500">
               {error}
             </div>
-          )}
-          {!loading && !error && activeNote ? (
+          ) : activeNote ? (
             <NoteEditor
               note={activeNote}
               onChange={updateNoteContent}
@@ -147,12 +132,9 @@ export default function DashboardLayout() {
               isMarkdownMode={isMarkdownMode}
             />
           ) : (
-            !loading &&
-            !error && (
-              <div className="flex-1 flex items-center justify-center text-gray-300">
-                Select a note or create a new one to begin editing
-              </div>
-            )
+            <div className="flex-1 flex items-center justify-center text-gray-300">
+              Select a note or create a new one to begin editing
+            </div>
           )}
         </div>
       </div>
