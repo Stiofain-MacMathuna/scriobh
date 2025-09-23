@@ -36,7 +36,7 @@ export default function Sidebar({
     setError('');
 
     try {
-      const res = await fetchWithTimeout(`${API_URL}/notes/`, {
+      const res = await fetchWithTimeout(`${API_URL}/notes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

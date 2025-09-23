@@ -11,8 +11,8 @@ services:
   frontend:
     build: ./frontend
     container_name: secure-notes-frontend
-    environment:
-      VITE_API_URL: https://scriobh.io
+    env_file:
+      - ./frontend/.env
     depends_on:
       - backend
     restart: unless-stopped

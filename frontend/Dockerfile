@@ -6,6 +6,7 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+COPY .env .env.local
 RUN npm run build
 
 FROM nginx:stable-alpine
