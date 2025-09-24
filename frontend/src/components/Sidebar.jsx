@@ -37,7 +37,8 @@ export default function Sidebar({
     setError('');
 
     try {
-      const res = await fetchWithTimeout(`${API_URL}/notes`, {
+      console.log('Fetching URL:', `${API_URL}/notes/`)
+      const res = await fetchWithTimeout(`${API_URL}/notes/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,18 +80,26 @@ export default function Sidebar({
 
   const handleDelete = async (e, noteId) => {
     e.stopPropagation();
+    const url = `${API_URL}/notes/${noteId}/`;
+    console.log('Actual DELETE URL:', `${API_URL}/notes/${noteId}/`);
     const confirmed = window.confirm('Are you sure you want to delete this note?');
     if (!confirmed) return;
 
     setError('');
 
+    const options = {
+      method: 'DELETE',
+      headers: {
+	'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    };
+
+    console.log('Final fetchWithTimeout URL:', url);
+    console.log('Final fetchWithTimeout options:', options);
+	
     try {
-      const res = await fetchWithTimeout(`${API_URL}/notes/${noteId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const res = await fetchWithTimeout(url, options);	
 
       if (!res.ok) {
         let errorBody = {};

@@ -52,7 +52,8 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
       setIsSaving(true);
       setError('');
       try {
-        const res = await fetchWithTimeout(`${API_URL}/notes/${id}`, {
+        console.log('Fetching URL:', `${API_URL}/notes/`)
+        const res = await fetchWithTimeout(`${API_URL}/notes/${id}/`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

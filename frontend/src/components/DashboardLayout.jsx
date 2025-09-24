@@ -31,7 +31,8 @@ export default function DashboardLayout() {
     setError('');
 
     try {
-      const res = await fetchWithTimeout(`${API_URL}/notes`, {
+      console.log('Fetching URL:', `${API_URL}/notes/`);
+      const res = await fetchWithTimeout(`${API_URL}/notes/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

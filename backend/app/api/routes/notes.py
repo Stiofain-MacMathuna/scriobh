@@ -24,7 +24,7 @@ async def list_notes(
             rows = await notes_repo.list_notes_by_user(
                 conn, user_id, search, limit=limit, offset=offset
             )
-            print(f"✅ Retrieved {len(rows)} notes for user {user_id}")
+            print(f"Retrieved {len(rows)} notes for user {user_id}")
             return [dict(r) for r in rows]
     except Exception as e:
         print(f"Error in list_notes for user {user_id}: {e}")
@@ -59,7 +59,7 @@ async def create_note(payload: NoteIn, user_id: UUID = Depends(get_current_user_
         raise HTTPException(status_code=500, detail="Failed to create note")
 
 # UPDATE NOTE (WRITE)
-@router.put("/{note_id}", response_model=Note)
+@router.put("/{note_id}/", response_model=Note)
 async def update_note(
     note_id: int,
     payload: NoteUpdate,
@@ -79,7 +79,7 @@ async def update_note(
         raise HTTPException(status_code=500, detail="Failed to update note")
 
 # DELETE NOTE (WRITE)
-@router.delete("/{note_id}", status_code=204)
+@router.delete("/{note_id}/", status_code=204)
 async def delete_note(note_id: int, user_id: UUID = Depends(get_current_user_id)):
     try:
         async with db_conn(timeout=10) as conn:

@@ -41,7 +41,7 @@ function NotesDashboard() {
     setError('');
     try {
       const url = currentSearchTerm
-        ? `${API_URL}/notes?search=${encodeURIComponent(currentSearchTerm)}`
+        ? `${API_URL}/notes/?search=${encodeURIComponent(currentSearchTerm)}`
         : `${API_URL}/notes/`;
 
       const res = await fetch(url, {
@@ -88,6 +88,7 @@ function NotesDashboard() {
   const handleAddNote = async () => {
     console.log('Adding new note...');
     try {
+      console.log('Fetching URL:', `${API_URL}/notes/`)
       const res = await fetch(`${API_URL}/notes/`, {
         method: 'POST',
         headers: {
@@ -114,7 +115,8 @@ function NotesDashboard() {
   const handleDeleteNote = async (id) => {
     console.log(`Deleting note ${id}...`);
     try {
-      const res = await fetch(`${API_URL}/notes/${id}`, {
+      console.log('Fetching URL:', `${API_URL}/notes/`)
+      const res = await fetch(`${API_URL}/notes/${id}/`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -138,7 +140,8 @@ function NotesDashboard() {
   const handleUpdateNote = async () => {
     console.log(`Updating note ${editingNoteId}...`);
     try {
-      const res = await fetch(`${API_URL}/notes/${editingNoteId}`, {
+      console.log('Fetching URL:', `${API_URL}/notes/`)
+      const res = await fetch(`${API_URL}/notes/${editingNoteId}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
