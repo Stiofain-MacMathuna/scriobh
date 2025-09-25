@@ -77,19 +77,9 @@ The production version of this app is deployed on:
 
 ---
 
-## Running Tests
+## Testing 
 
-### Backend
-
-```bash
-docker-compose exec backend pytest
-```
-
-### Frontend
-
-```bash
-docker-compose exec frontend npm test
-```
+Backend tests are written using Pytest and designed to validate core API functionality. While the test suite runs locally, containerized execution may require additional configuration depending on the environment.
 
 ## Project Structure
 
