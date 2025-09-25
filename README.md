@@ -88,3 +88,31 @@ docker-compose exec backend pytest
 ```bash
 docker-compose exec frontend npm test
 ```
+
+## Project Structure
+
+```text
+secure-notes-app/
+├── backend/         # FastAPI app with Alembic migrations
+├── frontend/        # React app
+├── nginx/           # NGINX config for reverse proxy + HTTPS
+├── docker-compose.yml
+├── docker-compose.override.yml
+└── pg_hba.override.conf
+```
+
+## Why This Project?
+
+This app showcases my ability to:
+
+- Build secure, production-ready APIs  
+- Design clean, responsive UIs  
+- Manage environment-specific configurations  
+- Automate database migrations  
+- Containerize and deploy full-stack apps to the cloud  
+- Configure HTTPS and reverse proxies for secure traffic  
+- Integrate cloud services like EC2 and RDS for scalable infrastructure  
+
+I built this as part of my portfolio to demonstrate end-to-end development and deployment skills across both application and infrastructure layers.
+
+---
