@@ -24,7 +24,7 @@ jobs:
           --health-retries=5
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
       PYTHONPATH: backend
 
     steps:
@@ -40,14 +40,14 @@ jobs:
       - name: Confirm Postgres is accepting connections
         run: |
           for i in {1..15}; do
-            PGPASSWORD=postgres psql -h localhost -U postgres -d postgres -c '\q' && break
+            PGPASSWORD=postgres psql -h postgres -U postgres -d postgres -c '\q' && break
             echo "Waiting for Postgres to accept connections..."
             sleep 2
           done
 
       - name: Create .env.test for compatibility
         run: |
-          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres" > backend/.env.test
+          echo "DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres" > backend/.env.test
 
       - name: Debug DB connection string
         run: echo "DATABASE_URL=$DATABASE_URL"
