@@ -24,6 +24,10 @@ jobs:
           --health-retries=5
 
     env:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: postgres
+      DB_NAME: postgres
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
       PYTHONPATH: backend
 
@@ -47,7 +51,11 @@ jobs:
 
       - name: Create .env.test for compatibility
         run: |
-          echo "DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres" > backend/.env.test
+          echo "DB_USER=postgres" > backend/.env.test
+          echo "DB_PASSWORD=postgres" >> backend/.env.test
+          echo "DB_HOST=postgres" >> backend/.env.test
+          echo "DB_NAME=postgres" >> backend/.env.test
+          echo "DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres" >> backend/.env.test
 
       - name: Debug DB connection string
         run: echo "DATABASE_URL=$DATABASE_URL"
