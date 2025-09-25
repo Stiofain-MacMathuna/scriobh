@@ -2,6 +2,8 @@
 
 A full-stack web application for securely creating, storing, and managing personal notes — built with **FastAPI**, **React**, **PostgreSQL**, and **Docker**, and deployed to the cloud using **AWS EC2**, **RDS**, and **NGINX**. This project demonstrates my ability to build, containerize, and deploy secure, scalable applications using modern development practices.
 
+**Live Demo:** [https://www.scriobh.io](https://www.scriobh.io)
+
 ---
 
 ## Features
