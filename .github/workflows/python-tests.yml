@@ -45,6 +45,10 @@ jobs:
             sleep 2
           done
 
+      - name: Create .env.test for compatibility
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres" > backend/.env.test
+
       - name: Debug DB connection string
         run: echo "DATABASE_URL=$DATABASE_URL"
 
