@@ -14,7 +14,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
+          POSTGRES_DB: notes-app-db
         ports:
           - 5432:5432
         options: >-
@@ -27,8 +27,7 @@ jobs:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_HOST: postgres
-      DB_NAME: postgres
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
+      DB_NAME: notes-app-db
       PYTHONPATH: backend
 
     steps:
@@ -44,21 +43,17 @@ jobs:
       - name: Confirm Postgres is accepting connections
         run: |
           for i in {1..15}; do
-            PGPASSWORD=postgres psql -h postgres -U postgres -d postgres -c '\q' && break
+            PGPASSWORD=postgres psql -h postgres -U postgres -d notes-app-db -c '\q' && break
             echo "Waiting for Postgres to accept connections..."
             sleep 2
           done
 
-      - name: Create .env.test for compatibility
+      - name: Debug DB env vars
         run: |
-          echo "DB_USER=postgres" > backend/.env.test
-          echo "DB_PASSWORD=postgres" >> backend/.env.test
-          echo "DB_HOST=postgres" >> backend/.env.test
-          echo "DB_NAME=postgres" >> backend/.env.test
-          echo "DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres" >> backend/.env.test
-
-      - name: Debug DB connection string
-        run: echo "DATABASE_URL=$DATABASE_URL"
+          echo "DB_USER=$DB_USER"
+          echo "DB_PASSWORD=$DB_PASSWORD"
+          echo "DB_HOST=$DB_HOST"
+          echo "DB_NAME=$DB_NAME"
 
       - name: Run Alembic migrations
         run: alembic -c backend/alembic.ini upgrade head
