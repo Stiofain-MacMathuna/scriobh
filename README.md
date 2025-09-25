@@ -45,7 +45,7 @@ A full-stack web application for securely creating, storing, and managing person
 ### Setup
 
 ```bash
-git clone https://github.com/yourusername/secure-notes-app.git
+git clone https://github.com/Stiofain-MacMathuna/secure-notes-app.git
 cd secure-notes-app/scriobh-dev
 docker-compose up --build
 ```
