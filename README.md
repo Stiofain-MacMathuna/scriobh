@@ -79,7 +79,7 @@ The production version of this app is deployed on:
 
 ## Testing 
 
-Backend tests are written using Pytest and designed to validate core API functionality. While the test suite runs locally, containerized execution may require additional configuration depending on the environment.
+Backend tests are written using Pytest and designed to validate core API functionality. To run them locally, a PostgreSQL database must be available—either via Docker or a manual setup. For convenience, the test environment is preconfigured to use .env.test.
 
 ## Project Structure
 
