@@ -27,7 +27,12 @@ jobs:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_HOST: postgres
+      DB_PORT: 5432
       DB_NAME: notes-app-db
+      DB_SSL_MODE: disable
+      DB_POOL_MIN: 1
+      DB_POOL_MAX: 5
+      DB_TIMEOUT: 10
       PYTHONPATH: backend
 
     steps:
@@ -53,7 +58,9 @@ jobs:
           echo "DB_USER=$DB_USER"
           echo "DB_PASSWORD=$DB_PASSWORD"
           echo "DB_HOST=$DB_HOST"
+          echo "DB_PORT=$DB_PORT"
           echo "DB_NAME=$DB_NAME"
+          echo "DB_SSL_MODE=$DB_SSL_MODE"
 
       - name: Run Alembic migrations
         run: alembic -c backend/alembic.ini upgrade head
