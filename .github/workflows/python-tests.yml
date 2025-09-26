@@ -23,6 +23,18 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
+    env:
+      PYTHONPATH: backend
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: notes-app-db
+      DB_SSL_MODE: disable
+      DB_POOL_MIN: 1
+      DB_POOL_MAX: 5
+      DB_TIMEOUT: 10
+
     steps:
       - uses: actions/checkout@v4
 
@@ -42,29 +54,7 @@ jobs:
           done
 
       - name: Run Alembic migrations
-        env:
-          PYTHONPATH: backend
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: notes-app-db
-          DB_SSL_MODE: disable
-          DB_POOL_MIN: 1
-          DB_POOL_MAX: 5
-          DB_TIMEOUT: 10
         run: alembic -c backend/alembic.ini upgrade head
 
       - name: Run tests
-        env:
-          PYTHONPATH: backend
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: notes-app-db
-          DB_SSL_MODE: disable
-          DB_POOL_MIN: 1
-          DB_POOL_MAX: 5
-          DB_TIMEOUT: 10
         run: pytest -v --cov=backend --cov-report=term-missing
