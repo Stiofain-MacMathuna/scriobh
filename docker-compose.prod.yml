@@ -24,6 +24,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - ./backend/.env.prod
     command: >
       sh -c "
         alembic upgrade head &&
@@ -36,7 +38,11 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        ENV: prod
     container_name: secure-notes-frontend
+    env_file:
+      - ./frontend/.env.prod
     depends_on:
       - backend
     ports:

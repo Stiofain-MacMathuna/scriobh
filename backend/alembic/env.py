@@ -2,41 +2,43 @@ from logging.config import fileConfig
 import os
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from sqlalchemy.engine import URL  
 from app.models import Base
+from dotenv import load_dotenv
 
-target_metadata = Base.metadata
+# Resolve environment file path
+env_file = os.getenv("DOTENV") or (
+    ".env.dev" if os.getenv("APP_ENV") == "dev" else ".env.prod"
+)
+env_path = os.path.abspath(env_file)
 
+# Load environment variables
+if os.path.exists(env_path):
+    load_dotenv(dotenv_path=env_path, override=True)
+    print(f"Loaded environment from {env_path}")
+else:
+    print(f"Environment file {env_path} not found. Relying on injected environment variables.")
+
+# Alembic config
 config = context.config
-
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
-DB_HOST = os.getenv("DB_HOST", "")
-DB_PORT = int(os.getenv("DB_PORT", "5432"))
-DB_NAME = os.getenv("DB_NAME", "")
-SSL_MODE = os.getenv("DB_SSL_MODE", "disable")
+# Build connection string from env
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    database_url = (
+        f"postgresql://{os.getenv('DB_USER', 'postgres')}:"
+        f"{os.getenv('DB_PASSWORD', 'postgres')}@"
+        f"{os.getenv('DB_HOST', 'localhost')}:"
+        f"{os.getenv('DB_PORT', '5432')}/"
+        f"{os.getenv('DB_NAME', 'postgres')}"
+    )
 
-# Build URL from pieces
-SYNC_URL = URL.create(
-    drivername="postgresql+psycopg",
-    username=DB_USER,
-    password=DB_PASSWORD,
-    host=DB_HOST,
-    port=DB_PORT,
-    database=DB_NAME,
-    query={"sslmode": SSL_MODE},
-)
+config.set_main_option("sqlalchemy.url", database_url)
+print("Alembic connecting to:", database_url)
 
-DBURL_ENV = os.getenv("DATABASE_URL")
-if DBURL_ENV:
-    config.set_main_option("sqlalchemy.url", DBURL_ENV)
-else:
-    config.set_main_option("sqlalchemy.url", str(SYNC_URL))
-
-print("Alembic connecting to:", config.get_main_option("sqlalchemy.url"))
+# Metadata for migrations
+target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
@@ -46,7 +48,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode'."""
+    """Run migrations in 'online' mode."""
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

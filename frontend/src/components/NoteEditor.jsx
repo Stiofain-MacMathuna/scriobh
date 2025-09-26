@@ -1,16 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import _ from 'lodash';
 import '../styles/scrollbar.css';
+import { fetchWithAuth } from '../utils/fetchWithAuth';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-function fetchWithTimeout(url, options = {}, timeout = 10000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
-}
 
 function NoteEditor({ note, onChange, isMarkdownMode }) {
   const [title, setTitle] = useState('');
@@ -24,6 +20,7 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
   const containerRef = useRef(null);
   const noteIdRef = useRef(null);
   const lastSavedRef = useRef({ title: '', content: '' });
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!note) return;
@@ -46,21 +43,18 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
 
   const saveNoteDebounced = useCallback(
     _.debounce(async (id, titleToSave, contentToSave) => {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
       setIsSaving(true);
       setError('');
       try {
-        console.log('Fetching URL:', `${API_URL}/notes/`)
-        const res = await fetchWithTimeout(`${API_URL}/notes/${id}/`, {
+        const res = await fetchWithAuth(`${API_URL}/notes/${id}/`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ title: titleToSave, content: contentToSave }),
-        });
+        }, navigate);
+
+        if (!res) return;
 
         const responseBody = await res.json();
         if (!res.ok) {
@@ -77,14 +71,14 @@ function NoteEditor({ note, onChange, isMarkdownMode }) {
         setIsSaving(false);
       }
     }, 1000),
-    []
+    [navigate]
   );
 
   useEffect(() => {
     return () => {
       saveNoteDebounced.cancel();
     };
-  }, []);
+  }, [saveNoteDebounced]);
 
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;

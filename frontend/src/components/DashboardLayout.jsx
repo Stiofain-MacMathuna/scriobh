@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import NoteEditor from './NoteEditor';
+import { fetchWithAuth } from '../utils/fetchWithAuth';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-function fetchWithTimeout(url, options = {}, timeout = 10000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
-}
 
 export default function DashboardLayout() {
   const [openNotes, setOpenNotes] = useState([]);
@@ -16,30 +12,19 @@ export default function DashboardLayout() {
   const [isMarkdownMode, setIsMarkdownMode] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const activeNote = openNotes.find((note) => note.id === activeNoteId);
 
   async function fetchNotes() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.warn('No token found. Cannot fetch notes.');
-      setError('Authentication required.');
-      setIsLoading(false);
-      return;
-    }
-
     setError('');
+    setIsLoading(true);
+
+    const res = await fetchWithAuth(`${API_URL}/notes/`, {}, navigate);
+    if (!res) return;
 
     try {
-      console.log('Fetching URL:', `${API_URL}/notes/`);
-      const res = await fetchWithTimeout(`${API_URL}/notes/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
       if (res.status === 404) {
-        console.log("No notes found for this user. Displaying a blank slate.");
         setOpenNotes([]);
         setActiveNoteId(null);
         return;
@@ -62,8 +47,8 @@ export default function DashboardLayout() {
         setActiveNoteId(data[0].id);
       }
     } catch (err) {
-      console.error('Error fetching notes:', err);
-      setError('Network error while loading notes.');
+      console.error('Error parsing notes:', err);
+      setError('Error loading notes.');
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +86,11 @@ export default function DashboardLayout() {
   }
 
   if (isLoading) {
-    return <div className="h-screen w-screen bg-[rgb(15,23,42)] flex items-center justify-center text-gray-400">Loading notes...</div>;
+    return (
+      <div className="h-screen w-screen bg-[rgb(15,23,42)] flex items-center justify-center text-gray-400">
+        Loading notes...
+      </div>
+    );
   }
 
   return (

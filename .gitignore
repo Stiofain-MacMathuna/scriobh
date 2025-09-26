@@ -86,9 +86,14 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+<<<<<<< HEAD
 backend/.env.test
 .env.test
 .env.prod
+=======
+.env.prod
+
+>>>>>>> 1e40ac0cc37fc961db3adc0830c1ddb9d9a4178d
 .spyderproject
 .spyproject
 

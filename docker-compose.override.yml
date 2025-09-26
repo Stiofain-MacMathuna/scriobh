@@ -1,0 +1,24 @@
+services:
+  backend:
+    env_file:
+      - ./backend/.env.dev
+    command: >
+      sh -c "
+        sleep 15 &&
+        alembic upgrade head &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        ENV: dev
+    container_name: secure-notes-frontend
+    env_file:
+      - ./frontend/.env.dev
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    restart: unless-stopped

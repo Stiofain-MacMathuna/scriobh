@@ -32,7 +32,7 @@ async def list_notes(
 
 
 # GET SINGLE NOTE (READ)
-@router.get("/{note_id}", response_model=Note)
+@router.get("/{note_id}/", response_model=Note)
 async def get_note(note_id: int, user_id: UUID = Depends(get_current_user_id)):
     try:
         async with db_conn(timeout=10) as conn:
