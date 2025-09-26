@@ -34,6 +34,7 @@ jobs:
       DB_POOL_MIN: 1
       DB_POOL_MAX: 5
       DB_TIMEOUT: 10
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/notes-app-db
 
     steps:
       - uses: actions/checkout@v4

@@ -3,29 +3,26 @@ import os
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from app.models import Base
-
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv(dotenv_path=".env.dev")
-
-# Log environment loading
-print("Loaded DB_USER:", os.getenv("DB_USER"))
-print("Loaded DB_PASSWORD:", os.getenv("DB_PASSWORD"))
-
-# Hardcoded connection string for debugging
-HARD_SYNC_URL = "postgresql://postgres:postgres@db:5432/notes-app-db"
+# Load environment variables from .env.dev or fallback
+dotenv_path = os.getenv("DOTENV", ".env.dev")
+load_dotenv(dotenv_path=dotenv_path, override=True)
 
 # Alembic config
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Set the connection string directly
-config.set_main_option("sqlalchemy.url", HARD_SYNC_URL)
+# Dynamically set the connection string from env
+database_url = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:postgres@localhost:5432/notes-app-db"
+)
+config.set_main_option("sqlalchemy.url", database_url)
 
 # Log connection string
-print("Alembic connecting to:", HARD_SYNC_URL)
+print("Alembic connecting to:", database_url)
 
 # Metadata for migrations
 target_metadata = Base.metadata

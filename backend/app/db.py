@@ -1,11 +1,11 @@
-import os
+import asyncio
 import asyncpg
 import ssl as ssl_lib
-import asyncio
 from contextlib import asynccontextmanager
 from app.core.config import (
-    DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME, DB_SSL_MODE,
-    DB_POOL_MIN, DB_POOL_MAX, DB_TIMEOUT,
+    get_db_user, get_db_password, get_db_host, get_db_port,
+    get_db_name, get_db_ssl_mode, get_db_pool_min, get_db_pool_max,
+    get_db_timeout
 )
 
 DB_POOL = None
@@ -18,7 +18,7 @@ async def init_db_pool(retries=3, delay=2):
     if DB_POOL:
         return DB_POOL
 
-    ssl_mode = os.getenv("DB_SSL_MODE", DB_SSL_MODE).lower()
+    ssl_mode = get_db_ssl_mode().lower()
     ssl = None
     if ssl_mode != "disable":
         ssl = ssl_lib.create_default_context()
@@ -26,14 +26,14 @@ async def init_db_pool(retries=3, delay=2):
     for attempt in range(retries):
         try:
             DB_POOL = await asyncpg.create_pool(
-                user=os.getenv("DB_USER", DB_USER),
-                password=os.getenv("DB_PASSWORD", DB_PASSWORD),
-                host=os.getenv("DB_HOST", DB_HOST),
-                port=int(os.getenv("DB_PORT", DB_PORT)),
-                database=os.getenv("DB_NAME", DB_NAME),
-                min_size=int(os.getenv("DB_POOL_MIN", DB_POOL_MIN)),
-                max_size=int(os.getenv("DB_POOL_MAX", DB_POOL_MAX)),
-                command_timeout=int(os.getenv("DB_TIMEOUT", DB_TIMEOUT)),
+                user=get_db_user(),
+                password=get_db_password(),
+                host=get_db_host(),
+                port=int(get_db_port()),
+                database=get_db_name(),
+                min_size=int(get_db_pool_min()),
+                max_size=int(get_db_pool_max()),
+                command_timeout=int(get_db_timeout()),
                 ssl=ssl,
             )
             print(f"DB pool initialized: max={DB_POOL._maxsize}")
@@ -80,11 +80,11 @@ async def init_test_pool():
         return _TEST_POOL
 
     _TEST_POOL = await asyncpg.create_pool(
-        user=os.getenv("DB_USER", DB_USER),
-        password=os.getenv("DB_PASSWORD", DB_PASSWORD),
-        host=os.getenv("DB_HOST", DB_HOST),
-        port=int(os.getenv("DB_PORT", DB_PORT)),
-        database=os.getenv("DB_NAME", DB_NAME),
+        user=get_db_user(),
+        password=get_db_password(),
+        host=get_db_host(),
+        port=int(get_db_port()),
+        database=get_db_name(),
         min_size=1,
         max_size=5,
         command_timeout=10,
