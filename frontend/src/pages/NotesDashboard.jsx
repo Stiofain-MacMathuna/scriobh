@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import _ from 'lodash';
+import { fetchWithAuth } from '../utils/fetchWithAuth';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -16,25 +17,6 @@ function NotesDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
-
-  useEffect(() => {
-    if (!token) {
-      navigate('/');
-      return;
-    }
-
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp * 1000 < Date.now()) {
-        localStorage.removeItem('token');
-        navigate('/');
-      }
-    } catch {
-      localStorage.removeItem('token');
-      navigate('/');
-    }
-  }, [token, navigate]);
 
   const fetchNotes = useCallback(async (currentSearchTerm) => {
     setLoading(true);
@@ -44,20 +26,11 @@ function NotesDashboard() {
         ? `${API_URL}/notes/?search=${encodeURIComponent(currentSearchTerm)}`
         : `${API_URL}/notes/`;
 
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.detail || 'Failed to fetch notes');
-      }
+      const res = await fetchWithAuth(url, {}, navigate);
+      if (!res) return;
 
       const data = await res.json();
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid notes format');
-      }
-
+      if (!Array.isArray(data)) throw new Error('Invalid notes format');
       setNotes(data);
     } catch (err) {
       setError('Error loading notes.');
@@ -65,7 +38,7 @@ function NotesDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [navigate]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -86,74 +59,55 @@ function NotesDashboard() {
   }, [searchTerm, debouncedSearch]);
 
   const handleAddNote = async () => {
-    console.log('Adding new note...');
     try {
-      console.log('Fetching URL:', `${API_URL}/notes/`)
-      const res = await fetch(`${API_URL}/notes/`, {
+      const res = await fetchWithAuth(`${API_URL}/notes/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: newTitle, content: newContent }),
-      });
+      }, navigate);
+      if (!res) return;
 
-      console.log('Add note response:', res);
-      if (!res.ok) throw new Error('Failed to add note');
       const created = await res.json();
-      console.log('Note created:', created);
       setNotes((prev) => [...prev, created]);
       setNewTitle('');
       setNewContent('');
       setSearchTerm('');
     } catch (err) {
       setError('Error adding note.');
-      console.error('Error adding note:', err.name, err.message);
+      console.error('Error adding note:', err);
     }
   };
 
   const handleDeleteNote = async (id) => {
-    console.log(`Deleting note ${id}...`);
     try {
-      console.log('Fetching URL:', `${API_URL}/notes/`)
-      const res = await fetch(`${API_URL}/notes/${id}/`, {
+      const res = await fetchWithAuth(`${API_URL}/notes/${id}/`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      }, navigate);
+      if (!res) return;
 
-      console.log('Delete response:', res);
-      if (!res.ok) throw new Error('Failed to delete note');
       setNotes((prev) => prev.filter((note) => note.id !== id));
     } catch (err) {
       setError('Error deleting note.');
-      console.error('Error deleting note:', err.name, err.message);
+      console.error('Error deleting note:', err);
     }
   };
 
   const handleEditNote = (note) => {
-    console.log('Editing note:', note);
     setEditingNoteId(note.id);
     setEditTitle(note.title);
     setEditContent(note.content);
   };
 
   const handleUpdateNote = async () => {
-    console.log(`Updating note ${editingNoteId}...`);
     try {
-      console.log('Fetching URL:', `${API_URL}/notes/`)
-      const res = await fetch(`${API_URL}/notes/${editingNoteId}/`, {
+      const res = await fetchWithAuth(`${API_URL}/notes/${editingNoteId}/`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: editTitle, content: editContent }),
-      });
+      }, navigate);
+      if (!res) return;
 
-      console.log('Update response:', res);
-      if (!res.ok) throw new Error('Failed to update note');
       const updated = await res.json();
-      console.log('Note updated:', updated);
       setNotes((prev) =>
         prev.map((note) => (note.id === updated.id ? updated : note))
       );
@@ -162,12 +116,11 @@ function NotesDashboard() {
       setEditContent('');
     } catch (err) {
       setError('Error updating note.');
-      console.error('Error updating note:', err.name, err.message);
+      console.error('Error updating note:', err);
     }
   };
 
   const handleLogout = () => {
-    console.log('Logging out...');
     localStorage.removeItem('token');
     setSearchTerm('');
     navigate('/');

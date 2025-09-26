@@ -2,14 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/scrollbar.css';
 import Tooltip from './Tooltip';
+import { fetchWithAuth } from '../utils/fetchWithAuth';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-function fetchWithTimeout(url, options = {}, timeout = 10000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
-}
 
 export default function Sidebar({
   notes,
@@ -26,46 +21,17 @@ export default function Sidebar({
   const [error, setError] = useState('');
 
   const handleCreate = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.warn('No token found. Redirecting to login...');
-      navigate('/login');
-      return;
-    }
-
     setCreating(true);
     setError('');
 
     try {
-      console.log('Fetching URL:', `${API_URL}/notes/`)
-      const res = await fetchWithTimeout(`${API_URL}/notes/`, {
+      const res = await fetchWithAuth(`${API_URL}/notes/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: 'Untitled Note',
-          content: '',
-        }),
-      });
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: 'Untitled Note', content: '' }),
+      }, navigate);
 
-      if (res.status === 401) {
-        console.warn('Unauthorized. Redirecting to login...');
-        localStorage.removeItem('token');
-        navigate('/login');
-        return;
-      }
-
-      if (!res.ok) {
-        let errData = {};
-        try {
-          errData = await res.json();
-        } catch {}
-        console.warn('Create failed:', errData);
-        setError('Failed to create note.');
-        return;
-      }
+      if (!res) return;
 
       const newNote = await res.json();
       onCreate(newNote);
@@ -80,26 +46,21 @@ export default function Sidebar({
 
   const handleDelete = async (e, noteId) => {
     e.stopPropagation();
-    const url = `${API_URL}/notes/${noteId}/`;
-    console.log('Actual DELETE URL:', `${API_URL}/notes/${noteId}/`);
     const confirmed = window.confirm('Are you sure you want to delete this note?');
     if (!confirmed) return;
 
     setError('');
 
-    const options = {
-      method: 'DELETE',
-      headers: {
-	'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    };
-
-    console.log('Final fetchWithTimeout URL:', url);
-    console.log('Final fetchWithTimeout options:', options);
-	
     try {
-      const res = await fetchWithTimeout(url, options);	
+      const res = await fetchWithAuth(`${API_URL}/notes/${noteId}/`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      }, navigate);
+
+      if (!res) {
+        setError('Failed to delete note.');
+        return;
+      }
 
       if (!res.ok) {
         let errorBody = {};
