@@ -2,16 +2,19 @@ import os
 import pytest
 from dotenv import load_dotenv
 
+# Load test environment variables
 dotenv_path = os.path.join(os.getcwd(), "backend", ".env.test")
 load_dotenv(dotenv_path, override=True)
 
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from asgi_lifespan import LifespanManager
 from app.main import app
-from app.db import init_test_pool, close_test_pool, get_test_db_conn, init_test_pool
+from app.db import init_test_pool, close_test_pool, get_test_db_conn
 from app.core import security as auth_module
-from httpx import ASGITransport
+from app.core.security import get_current_user_id
 from tests.constants import TEST_EMAIL, TEST_PASSWORD, FIXED_USER_ID
+
+print("conftest.py loaded")
 
 @pytest.fixture(scope="function")
 async def test_pool():
@@ -19,19 +22,19 @@ async def test_pool():
     yield pool
     await close_test_pool()
 
-@pytest.fixture(scope="session", autouse=True)
-def override_auth_dependency():
-    print("Overriding get_current_user_id with FIXED_USER_ID")
-    app.dependency_overrides[auth_module.get_current_user_id] = lambda: FIXED_USER_ID
-    yield
-    app.dependency_overrides.clear()
-
 @pytest.fixture(scope="function")
 async def async_test_client(test_pool):
+    # Apply auth override here after app is initialized
+    app.dependency_overrides[get_current_user_id] = lambda: FIXED_USER_ID
+    print("Applied override inside async_test_client")
+
     async with LifespanManager(app):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             yield client
+
+    app.dependency_overrides.clear()
+    print("Cleared override after test")
 
 @pytest.fixture
 async def cleanup_notes(test_pool):

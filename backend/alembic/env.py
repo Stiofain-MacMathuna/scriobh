@@ -5,16 +5,18 @@ from sqlalchemy import engine_from_config, pool
 from app.models import Base
 from dotenv import load_dotenv
 
-# Determine environment
-app_env = os.getenv("APP_ENV", "prod")
-env_file = ".env.dev" if app_env == "dev" else ".env.prod"
+# Resolve environment file path
+env_file = os.getenv("DOTENV") or (
+    ".env.dev" if os.getenv("APP_ENV") == "dev" else ".env.prod"
+)
+env_path = os.path.abspath(env_file)
 
 # Load environment variables
-if os.path.exists(env_file):
-    load_dotenv(dotenv_path=env_file, override=True)
-    print(f"Loaded environment from {env_file}")
+if os.path.exists(env_path):
+    load_dotenv(dotenv_path=env_path, override=True)
+    print(f"Loaded environment from {env_path}")
 else:
-    print(f"Environment file {env_file} not found. Relying on injected environment variables.")
+    print(f"Environment file {env_path} not found. Relying on injected environment variables.")
 
 # Alembic config
 config = context.config
