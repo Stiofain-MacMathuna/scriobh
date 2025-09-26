@@ -63,7 +63,27 @@ jobs:
           echo "DB_SSL_MODE=$DB_SSL_MODE"
 
       - name: Run Alembic migrations
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: notes-app-db
+          DB_SSL_MODE: disable
+          DB_POOL_MIN: 1
+          DB_POOL_MAX: 5
+          DB_TIMEOUT: 10
         run: alembic -c backend/alembic.ini upgrade head
 
       - name: Run tests
+        env:
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: notes-app-db
+          DB_SSL_MODE: disable
+          DB_POOL_MIN: 1
+          DB_POOL_MAX: 5
+          DB_TIMEOUT: 10
         run: pytest -v --cov=backend --cov-report=term-missing
