@@ -1,10 +1,10 @@
-# config.py
-
 import os
 from dotenv import load_dotenv
 
-dotenv_file = os.getenv("DOTENV", ".env")
-load_dotenv(dotenv_file, override=True)
+# Load .env file only if it exists and we're not in CI
+dotenv_file = os.getenv("DOTENV", ".env.dev")
+if os.path.exists(dotenv_file):
+    load_dotenv(dotenv_file, override=True)
 
 # JWT
 def get_jwt_secret():
