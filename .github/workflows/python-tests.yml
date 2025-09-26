@@ -41,8 +41,9 @@ jobs:
             sleep 2
           done
 
-      - name: Export env vars and run Alembic
+      - name: Run Alembic migrations
         run: |
+          export PYTHONPATH=backend
           export DB_USER=postgres
           export DB_PASSWORD=postgres
           export DB_HOST=localhost
@@ -54,8 +55,10 @@ jobs:
           export DB_TIMEOUT=10
           alembic -c backend/alembic.ini upgrade head
 
-      - name: Export env vars and run tests
+
+      - name: Run tests
         run: |
+          export PYTHONPATH=backend
           export DB_USER=postgres
           export DB_PASSWORD=postgres
           export DB_HOST=localhost
