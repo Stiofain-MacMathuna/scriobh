@@ -5,23 +5,34 @@ from sqlalchemy import engine_from_config, pool
 from app.models import Base
 from dotenv import load_dotenv
 
-# Load environment variables from .env.dev or fallback
-dotenv_path = os.getenv("DOTENV", ".env.dev")
-load_dotenv(dotenv_path=dotenv_path, override=True)
+# Determine environment
+app_env = os.getenv("APP_ENV", "prod")
+env_file = ".env.dev" if app_env == "dev" else ".env.prod"
+
+# Load environment variables
+if os.path.exists(env_file):
+    load_dotenv(dotenv_path=env_file, override=True)
+    print(f"Loaded environment from {env_file}")
+else:
+    print(f"Environment file {env_file} not found. Relying on injected environment variables.")
 
 # Alembic config
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Dynamically set the connection string from env
-database_url = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/notes-app-db"
-)
-config.set_main_option("sqlalchemy.url", database_url)
+# Build connection string from env
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    database_url = (
+        f"postgresql://{os.getenv('DB_USER', 'postgres')}:"
+        f"{os.getenv('DB_PASSWORD', 'postgres')}@"
+        f"{os.getenv('DB_HOST', 'localhost')}:"
+        f"{os.getenv('DB_PORT', '5432')}/"
+        f"{os.getenv('DB_NAME', 'postgres')}"
+    )
 
-# Log connection string
+config.set_main_option("sqlalchemy.url", database_url)
 print("Alembic connecting to:", database_url)
 
 # Metadata for migrations

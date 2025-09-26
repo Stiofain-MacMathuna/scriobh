@@ -1,10 +1,19 @@
 import os
 from dotenv import load_dotenv
 
-# Load .env file only if it exists and we're not in CI
-dotenv_file = os.getenv("DOTENV", ".env.dev")
-if os.path.exists(dotenv_file):
-    load_dotenv(dotenv_file, override=True)
+# Determine environment
+app_env = os.getenv("APP_ENV", "prod")
+
+# Choose env file based on environment
+env_file = ".env.dev" if app_env == "dev" else ".env.prod"
+print("Loading env file:", env_file)
+
+# Load it if it exists
+if os.path.exists(env_file):
+    load_dotenv(env_file, override=True)
+    print("DB_HOST from env:", os.getenv("DB_HOST"))
+else:
+    print("Env file not found:", env_file)
 
 # JWT
 def get_jwt_secret():
