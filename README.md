@@ -6,6 +6,22 @@ A full-stack web application for securely creating, storing, and managing person
 
 ---
 
+## Why This Project?
+
+This app showcases my ability to:
+
+- Build secure, production-ready APIs  
+- Design clean, responsive UIs  
+- Manage environment-specific configurations  
+- Automate database migrations  
+- Containerize and deploy full-stack apps to the cloud  
+- Configure HTTPS and reverse proxies for secure traffic  
+- Integrate cloud services like EC2 and RDS for scalable infrastructure  
+
+I built this as part of my portfolio to demonstrate end-to-end development and deployment skills across both application and infrastructure layers.
+
+---
+
 ## Features
 
 - Secure user authentication with JWT tokens  
@@ -79,7 +95,63 @@ The production version of this app is deployed on:
 
 ## Testing 
 
-Backend tests are written using Pytest and designed to validate core API functionality. To run them locally, a PostgreSQL database must be available—either via Docker or a manual setup. For convenience, the test environment is preconfigured to use .env.test.
+This project includes a comprehensive test suite for authentication, notes, health checks, and security. Here's how to run it locally.
+
+Step 1: Start Postgres via Docker
+
+Make sure Docker is installed and running. Then start the test database:
+
+```
+bash
+docker run --name notes-app-db \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=notes-app-db \
+  -p 5432:5432 \
+  -d postgres:15
+```
+
+##  Step 2: Apply Alembic Migrations
+
+Run this from the backend/ directory to initialize the schema:
+
+```
+bash
+cd backend
+DOTENV=.env.test alembic upgrade head
+```
+
+Note: Environment variables are hardcoded in .env.test. No setup required beyond starting the database.
+
+## Step 3: Run the Tests (from backend/)
+
+Tests must be run from the backend/ folder to ensure correct path resolution and environment loading:
+
+```
+bash
+cd backend
+pytest -v
+```
+
+This will execute all tests across the following modules:
+
+| Module          | Description                            |
+|-----------------|----------------------------------------|
+| test_auth.py    | Registration, login, and auth endpoints|
+| test_notes.py   | CRUD operations for notes              |
+| test_health.py  | Health check and DB connectivity       |
+| test_security.py| Password hashing and JWT validation    |
+
+## Clean Up
+
+To stop and remove the test database:
+
+```
+bash
+docker stop notes-app-db
+docker rm notes-app-db
+```
+---
 
 ## Project Structure
 
@@ -92,19 +164,4 @@ secure-notes-app/
 ├── docker-compose.override.yml
 └── pg_hba.override.conf
 ```
-
-## Why This Project?
-
-This app showcases my ability to:
-
-- Build secure, production-ready APIs  
-- Design clean, responsive UIs  
-- Manage environment-specific configurations  
-- Automate database migrations  
-- Containerize and deploy full-stack apps to the cloud  
-- Configure HTTPS and reverse proxies for secure traffic  
-- Integrate cloud services like EC2 and RDS for scalable infrastructure  
-
-I built this as part of my portfolio to demonstrate end-to-end development and deployment skills across both application and infrastructure layers.
-
 ---
