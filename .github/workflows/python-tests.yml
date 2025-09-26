@@ -58,4 +58,5 @@ jobs:
         run: alembic -c backend/alembic.ini upgrade head
 
       - name: Run tests
+        working-directory: backend
         run: pytest -v --cov=backend --cov-report=term-missing
