@@ -1,3 +1,4 @@
+import pytest
 from app.main import app
 from app.core.security import get_current_user_id
 from tests.constants import FIXED_USER_ID
