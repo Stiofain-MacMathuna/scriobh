@@ -26,7 +26,7 @@ jobs:
     env:
       DB_USER: postgres
       DB_PASSWORD: postgres
-      DB_HOST: postgres
+      DB_HOST: localhost
       DB_PORT: 5432
       DB_NAME: notes-app-db
       DB_SSL_MODE: disable
@@ -48,7 +48,7 @@ jobs:
       - name: Confirm Postgres is accepting connections
         run: |
           for i in {1..15}; do
-            PGPASSWORD=postgres psql -h postgres -U postgres -d notes-app-db -c '\q' && break
+            PGPASSWORD=postgres psql -h localhost -U postgres -d notes-app-db -c '\q' && break
             echo "Waiting for Postgres to accept connections..."
             sleep 2
           done
