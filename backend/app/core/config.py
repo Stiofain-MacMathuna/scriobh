@@ -54,4 +54,4 @@ def get_db_pool_mode():
     return os.getenv("DB_POOL_MODE", "session")
 
 def get_db_timeout():
-    return int(os.getenv("DB_TIMEOUT", "10"))
+    return int(os.getenv("DB_TIMEOUT", "10"))               
