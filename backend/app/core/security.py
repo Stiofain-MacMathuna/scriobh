@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from pydantic import BaseModel
 
-from .config import JWT_SECRET, JWT_ALG, ACCESS_TOKEN_EXPIRE_MINUTES
+from .config import get_jwt_secret, get_jwt_alg, get_access_token_expiry
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -35,14 +35,15 @@ async def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 # Create JWT access token
-def create_access_token(sub: str, *, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
+def create_access_token(sub: str, *, expires_minutes: int = None) -> str:
     now = datetime.now(timezone.utc)
+    expires_minutes = expires_minutes or get_access_token_expiry()
     payload = {
         "sub": sub,
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(minutes=expires_minutes)).timestamp()),
     }
-    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
+    return jwt.encode(payload, get_jwt_secret(), algorithm=get_jwt_alg())
 
 # Token payload model
 class TokenData(BaseModel):
@@ -56,7 +57,7 @@ async def get_current_user_id(token: str = Depends(oauth2_scheme)) -> UUID:
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
+        payload = jwt.decode(token, get_jwt_secret(), algorithms=[get_jwt_alg()])
         sub = payload.get("sub")
         exp = payload.get("exp")
 
