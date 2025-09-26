@@ -23,18 +23,6 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
-    env:
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: localhost
-      DB_PORT: 5432
-      DB_NAME: notes-app-db
-      DB_SSL_MODE: disable
-      DB_POOL_MIN: 1
-      DB_POOL_MAX: 5
-      DB_TIMEOUT: 10
-      PYTHONPATH: backend
-
     steps:
       - uses: actions/checkout@v4
 
@@ -53,37 +41,28 @@ jobs:
             sleep 2
           done
 
-      - name: Debug DB env vars
+      - name: Export env vars and run Alembic
         run: |
-          echo "DB_USER=$DB_USER"
-          echo "DB_PASSWORD=$DB_PASSWORD"
-          echo "DB_HOST=$DB_HOST"
-          echo "DB_PORT=$DB_PORT"
-          echo "DB_NAME=$DB_NAME"
-          echo "DB_SSL_MODE=$DB_SSL_MODE"
+          export DB_USER=postgres
+          export DB_PASSWORD=postgres
+          export DB_HOST=localhost
+          export DB_PORT=5432
+          export DB_NAME=notes-app-db
+          export DB_SSL_MODE=disable
+          export DB_POOL_MIN=1
+          export DB_POOL_MAX=5
+          export DB_TIMEOUT=10
+          alembic -c backend/alembic.ini upgrade head
 
-      - name: Run Alembic migrations
-        env:
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: notes-app-db
-          DB_SSL_MODE: disable
-          DB_POOL_MIN: 1
-          DB_POOL_MAX: 5
-          DB_TIMEOUT: 10
-        run: alembic -c backend/alembic.ini upgrade head
-
-      - name: Run tests
-        env:
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: notes-app-db
-          DB_SSL_MODE: disable
-          DB_POOL_MIN: 1
-          DB_POOL_MAX: 5
-          DB_TIMEOUT: 10
-        run: pytest -v --cov=backend --cov-report=term-missing
+      - name: Export env vars and run tests
+        run: |
+          export DB_USER=postgres
+          export DB_PASSWORD=postgres
+          export DB_HOST=localhost
+          export DB_PORT=5432
+          export DB_NAME=notes-app-db
+          export DB_SSL_MODE=disable
+          export DB_POOL_MIN=1
+          export DB_POOL_MAX=5
+          export DB_TIMEOUT=10
+          pytest -v --cov=backend --cov-report=term-missing
