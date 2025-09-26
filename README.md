@@ -72,6 +72,14 @@ The app will be available at:
 
 **Backend**: http://localhost:8000
 
+### Cleanup
+
+```bash
+docker-compose down --volumes --remove-orphans
+docker container prune
+docker image prune -a
+```
+
 ---
 
 ## Cloud Deployment
