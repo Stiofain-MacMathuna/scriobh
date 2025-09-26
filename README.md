@@ -38,7 +38,7 @@ I built this as part of my portfolio to demonstrate end-to-end development and d
 
 ## Tech Stack
 
-| Layer       | Technology                          |
+| Layer       | Technology                           |
 |-------------|--------------------------------------|
 | Frontend    | React, Vite                          |
 | Backend     | FastAPI, SQLAlchemy, Alembic         |
@@ -62,7 +62,7 @@ I built this as part of my portfolio to demonstrate end-to-end development and d
 
 ```bash
 git clone https://github.com/Stiofain-MacMathuna/secure-notes-app.git
-cd secure-notes-app/scriobh-dev
+cd secure-notes-app
 docker-compose up --build
 ```
 
@@ -71,6 +71,14 @@ The app will be available at:
 **Frontend**: http://localhost:3000
 
 **Backend**: http://localhost:8000
+
+### Cleanup
+
+```bash
+docker-compose down --volumes --remove-orphans
+docker container prune
+docker image prune -a
+```
 
 ---
 
@@ -101,8 +109,7 @@ This project includes a comprehensive test suite for authentication, notes, heal
 
 Make sure Docker is installed and running. Then start the test database:
 
-```
-bash
+```bash
 docker run --name notes-app-db \
   -e POSTGRES_USER=postgres \
   -e POSTGRES_PASSWORD=postgres \
@@ -115,8 +122,7 @@ docker run --name notes-app-db \
 
 Run this from the backend/ directory to initialize the schema:
 
-```
-bash
+```bash
 cd backend
 DOTENV=.env.test alembic upgrade head
 ```
@@ -127,8 +133,7 @@ Note: Environment variables are hardcoded in .env.test. No setup required beyond
 
 Tests must be run from the backend/ folder to ensure correct path resolution and environment loading:
 
-```
-bash
+```bash
 cd backend
 pytest -v
 ```
@@ -146,8 +151,7 @@ This will execute all tests across the following modules:
 
 To stop and remove the test database:
 
-```
-bash
+```bash
 docker stop notes-app-db
 docker rm notes-app-db
 ```
