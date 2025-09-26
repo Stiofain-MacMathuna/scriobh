@@ -7,7 +7,7 @@ async def test_list_is_empty_initially(async_test_client, cleanup_notes):
     assert r.json() == []
 
 @pytest.mark.asyncio
-async def test_create_and_get_by_id(async_test_client):
+async def test_create_and_get_by_id(async_test_client, seed_auth_user):
     r = await async_test_client.post("/notes/", json={"title": "Title1", "content": "Content1"})
     assert r.status_code == 201
     note = r.json()
@@ -32,7 +32,7 @@ async def test_update_partial(async_test_client):
     assert body["title"] == "Title1"
 
 @pytest.mark.asyncio
-async def test_delete_then_404(async_test_client):
+async def test_delete_then_404(async_test_client, seed_auth_user):
     note = (await async_test_client.post("/notes/", json={"title": "Title1", "content": "Content1"})).json()
     note_id = note["id"]
 

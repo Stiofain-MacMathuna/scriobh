@@ -21,6 +21,7 @@ async def test_pool():
 
 @pytest.fixture(scope="session", autouse=True)
 def override_auth_dependency():
+    print("Overriding get_current_user_id with FIXED_USER_ID")
     app.dependency_overrides[auth_module.get_current_user_id] = lambda: FIXED_USER_ID
     yield
     app.dependency_overrides.clear()
