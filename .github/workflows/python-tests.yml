@@ -42,30 +42,29 @@ jobs:
           done
 
       - name: Run Alembic migrations
-        run: |
-          export PYTHONPATH=backend
-          export DB_USER=postgres
-          export DB_PASSWORD=postgres
-          export DB_HOST=localhost
-          export DB_PORT=5432
-          export DB_NAME=notes-app-db
-          export DB_SSL_MODE=disable
-          export DB_POOL_MIN=1
-          export DB_POOL_MAX=5
-          export DB_TIMEOUT=10
-          alembic -c backend/alembic.ini upgrade head
-
+        env:
+          PYTHONPATH: backend
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: notes-app-db
+          DB_SSL_MODE: disable
+          DB_POOL_MIN: 1
+          DB_POOL_MAX: 5
+          DB_TIMEOUT: 10
+        run: alembic -c backend/alembic.ini upgrade head
 
       - name: Run tests
-        run: |
-          export PYTHONPATH=backend
-          export DB_USER=postgres
-          export DB_PASSWORD=postgres
-          export DB_HOST=localhost
-          export DB_PORT=5432
-          export DB_NAME=notes-app-db
-          export DB_SSL_MODE=disable
-          export DB_POOL_MIN=1
-          export DB_POOL_MAX=5
-          export DB_TIMEOUT=10
-          pytest -v --cov=backend --cov-report=term-missing
+        env:
+          PYTHONPATH: backend
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: notes-app-db
+          DB_SSL_MODE: disable
+          DB_POOL_MIN: 1
+          DB_POOL_MAX: 5
+          DB_TIMEOUT: 10
+        run: pytest -v --cov=backend --cov-report=term-missing
