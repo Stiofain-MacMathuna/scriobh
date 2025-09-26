@@ -14,7 +14,7 @@ async def test_create_and_get_by_id(async_test_client):
     note_id = note["id"]
     assert isinstance(note_id, int)
 
-    r = await async_test_client.get(f"/notes/{note_id}")
+    r = await async_test_client.get(f"/notes/{note_id}/")
     assert r.status_code == 200
     body = r.json()
     assert body["title"] == "Title1"
@@ -25,7 +25,7 @@ async def test_update_partial(async_test_client):
     note = (await async_test_client.post("/notes/", json={"title": "Title1", "content": "Content1"})).json()
     note_id = note["id"]
 
-    r = await async_test_client.put(f"/notes/{note_id}", json={"content": "Content1-update"})
+    r = await async_test_client.put(f"/notes/{note_id}/", json={"content": "Content1-update"})
     assert r.status_code == 200
     body = r.json()
     assert body["content"] == "Content1-update"
@@ -36,8 +36,8 @@ async def test_delete_then_404(async_test_client):
     note = (await async_test_client.post("/notes/", json={"title": "Title1", "content": "Content1"})).json()
     note_id = note["id"]
 
-    r = await async_test_client.delete(f"/notes/{note_id}")
+    r = await async_test_client.delete(f"/notes/{note_id}/")
     assert r.status_code == 204
 
-    r = await async_test_client.get(f"/notes/{note_id}")
+    r = await async_test_client.get(f"/notes/{note_id}/")
     assert r.status_code == 404

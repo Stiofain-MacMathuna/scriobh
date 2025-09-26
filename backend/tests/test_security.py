@@ -15,7 +15,7 @@ async def test_hash_and_verify_password():
 async def test_create_access_token_and_decode(test_pool):
     sub = str(uuid.uuid4())
     token = sec.create_access_token(sub, expires_minutes=1)
-    decoded = jwt.decode(token, sec.JWT_SECRET, algorithms=[sec.JWT_ALG])
+    decoded = jwt.decode(token, sec.get_jwt_secret(), algorithms=[sec.get_jwt_alg()])
     assert decoded["sub"] == sub
     assert "iat" in decoded
     assert "exp" in decoded
