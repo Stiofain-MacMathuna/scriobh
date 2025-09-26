@@ -97,7 +97,7 @@ The production version of this app is deployed on:
 
 This project includes a comprehensive test suite for authentication, notes, health checks, and security. Here's how to run it locally.
 
-Step 1: Start Postgres via Docker
+## Step 1: Start Postgres via Docker
 
 Make sure Docker is installed and running. Then start the test database:
 
