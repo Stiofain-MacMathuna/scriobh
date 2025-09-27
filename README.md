@@ -54,7 +54,7 @@ I built this as part of my portfolio to demonstrate end-to-end development and d
 ## Project Structure
 
 ```text
-.
+
 ├── backend
 ├── certbot-webroot
 ├── docker-compose.override.yml
