@@ -5,25 +5,21 @@ from sqlalchemy import engine_from_config, pool
 from app.models import Base
 from dotenv import load_dotenv
 
-# Resolve environment file path
 env_file = os.getenv("DOTENV") or (
     ".env.dev" if os.getenv("APP_ENV") == "dev" else ".env.prod"
 )
 env_path = os.path.abspath(env_file)
 
-# Load environment variables
 if os.path.exists(env_path):
     load_dotenv(dotenv_path=env_path, override=True)
     print(f"Loaded environment from {env_path}")
 else:
     print(f"Environment file {env_path} not found. Relying on injected environment variables.")
 
-# Alembic config
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Build connection string from env
 database_url = os.getenv("DATABASE_URL")
 if not database_url:
     database_url = (
@@ -37,7 +33,6 @@ if not database_url:
 config.set_main_option("sqlalchemy.url", database_url)
 print("Alembic connecting to:", database_url)
 
-# Metadata for migrations
 target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:

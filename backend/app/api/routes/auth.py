@@ -14,7 +14,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # Welcome note content
 WELCOME_NOTE_CONTENT = """# Welcome to scriobh!
 
-This is a **Markdown-enabled notes app**, built with computer science students in mind. It’s designed to make it easy to take well-structured notes during lectures, tutorials, and coding sessions.
+This is a **Markdown-enabled notes app**, built with computer science students in mind. It’s designed to make it easy to take well-structured notes during lectures and labs.
 
 In the bottom-left  corner of the app, you’ll find three important buttons:
 
