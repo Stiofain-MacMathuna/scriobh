@@ -1,4 +1,3 @@
-# app/api/schemas/auth.py
 from pydantic import BaseModel, EmailStr, field_validator
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, validator

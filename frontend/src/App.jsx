@@ -14,12 +14,9 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log('Token on app load:', token);
-    console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
     setIsAuthenticated(!!token);
     setLoading(false);
 
-    // Optional: redirect if token is missing
     if (!token && location.pathname !== '/') {
       navigate('/');
     }

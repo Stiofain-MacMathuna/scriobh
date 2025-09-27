@@ -18,8 +18,7 @@ COPY . .
 
 COPY .env.production .env.production
 
-RUN echo "Injecting VITE_API_URL into Vite build: $VITE_API_URL" && \
-    VITE_API_URL=$VITE_API_URL npm run build
+RUN VITE_API_URL=$VITE_API_URL npm run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:stable-alpine
