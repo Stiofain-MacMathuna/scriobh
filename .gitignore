@@ -91,7 +91,7 @@ backend/.env.test
 .env.test
 .env.prod
 =======
-.env.prod
+.env.production
 
 >>>>>>> 1e40ac0cc37fc961db3adc0830c1ddb9d9a4178d
 .spyderproject

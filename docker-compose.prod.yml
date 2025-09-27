@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: secure-notes-db
     environment:
       POSTGRES_USER: postgres
@@ -38,8 +38,10 @@ services:
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile.prod
       args:
         ENV: prod
+        VITE_API_URL: https://www.scriobh.io/notes/api
     container_name: secure-notes-frontend
     env_file:
       - ./frontend/.env.prod

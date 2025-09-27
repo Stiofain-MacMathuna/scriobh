@@ -1,3 +1,4 @@
+# cache busting dummy comment
 # Stage 1: Build
 FROM node:20-alpine AS build
 
@@ -5,7 +6,9 @@ WORKDIR /app
 
 # Accept build-time environment (default to production)
 ARG ENV=production
+ARG VITE_API_URL
 ENV NODE_ENV=$ENV
+ENV VITE_API_URL=$VITE_API_URL
 
 # Install dependencies
 COPY package*.json ./
@@ -14,13 +17,11 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Copy correct env file based on build arg
-COPY .env.prod .env.local
+# Optional: copy env file if you still want fallback
+COPY .env.production .env.production
 
-RUN echo "Contents of .env.local:" && cat .env.local || echo "Missing .env.local"
-
-# Build the frontend
-RUN npm run build
+RUN echo "Injecting VITE_API_URL into Vite build: $VITE_API_URL" && \
+    VITE_API_URL=$VITE_API_URL npm run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:stable-alpine
