@@ -15,9 +15,7 @@ RUN npm install
 COPY . .
 
 # Copy correct env file based on build arg
-COPY .env.prod .env.local
-
-RUN echo "Contents of .env.local:" && cat .env.local || echo "Missing .env.local"
+COPY .env.$ENV .env.local
 
 # Build the frontend
 RUN npm run build
