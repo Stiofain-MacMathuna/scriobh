@@ -51,6 +51,27 @@ I built this as part of my portfolio to demonstrate end-to-end development and d
 
 ---
 
+## Project Structure
+
+```text
+.
+├── backend
+├── certbot-webroot
+├── docker-compose.override.yml
+├── docker-compose.prod.yml
+├── docker-compose.yml
+├── frontend
+├── init.sql
+├── nginx.Dockerfile
+├── notes-app.conf
+├── pytest.ini
+├── README.md
+├── requirements.txt
+└── venv
+```
+
+---
+
 ## Getting Started (Local Development)
 
 ### Prerequisites
@@ -154,18 +175,5 @@ To stop and remove the test database:
 ```bash
 docker stop notes-app-db
 docker rm notes-app-db
-```
----
-
-## Project Structure
-
-```text
-secure-notes-app/
-├── backend/         # FastAPI app with Alembic migrations
-├── frontend/        # React app
-├── nginx/           # NGINX config for reverse proxy + HTTPS
-├── docker-compose.yml
-├── docker-compose.override.yml
-└── pg_hba.override.conf
 ```
 ---
