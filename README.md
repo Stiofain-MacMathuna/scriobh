@@ -82,7 +82,7 @@ I built this as part of my portfolio to demonstrate end-to-end development and d
 ### Setup
 
 ```bash
-git clone https://github.com/Stiofain-MacMathuna/secure-notes-app.git
+git clone https://github.com/Stiofain-MacMathuna/scriobh.git
 cd secure-notes-app
 docker-compose up --build
 ```
