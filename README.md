@@ -11,7 +11,7 @@ A full-stack web application for securely creating, storing, and managing person
 This app showcases my ability to:
 
 - Build secure, production-ready APIs  
-- Design clean, responsive UIs (React frontend components created with AI assistance))
+- Design clean, responsive UIs (React frontend components created with AI assistance)
 - Manage environment-specific configurations  
 - Automate database migrations  
 - Containerize and deploy full-stack apps to the cloud  
