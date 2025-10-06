@@ -1,6 +1,6 @@
 # Scríobh - Secure Notes App
 
-A full-stack web application for securely creating, storing, and managing personal notes — built with **FastAPI**, **React**, **PostgreSQL**, and **Docker**, and deployed to the cloud using **AWS EC2**, **RDS**, and **NGINX**. This project demonstrates my ability to build, containerize, and deploy secure, scalable applications using modern development practices.
+A full-stack web application for securely creating, storing, and managing personal notes — built with **FastAPI** (created with AI assistance), **React**, **PostgreSQL**, and **Docker**, and deployed to the cloud using **AWS EC2**, **RDS**, and **NGINX**. This project demonstrates my ability to build, containerize, and deploy secure, scalable applications using modern development practices.
 
 **Live Demo:** [https://www.scriobh.io](https://www.scriobh.io)
 
@@ -11,7 +11,7 @@ A full-stack web application for securely creating, storing, and managing person
 This app showcases my ability to:
 
 - Build secure, production-ready APIs  
-- Design clean, responsive UIs  
+- Design clean, responsive UIs (React frontend components created with AI assistance))
 - Manage environment-specific configurations  
 - Automate database migrations  
 - Containerize and deploy full-stack apps to the cloud  
@@ -26,7 +26,7 @@ I built this as part of my portfolio to demonstrate end-to-end development and d
 
 - Secure user authentication with JWT tokens  
 - Encrypted note storage for privacy  
-- RESTful API built with FastAPI and SQLAlchemy  
+- RESTful API built with FastAPI and asyncpg  
 - Responsive React frontend  
 - Dockerized for easy local development  
 - Alembic migrations run automatically on startup  
